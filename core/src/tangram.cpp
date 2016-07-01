@@ -159,7 +159,7 @@ void Map::loadScene(const char* _scenePath, bool _useScenePosition) {
     }
 }
 
-void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback) {
+void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback, void *_cbData) {
     LOG("Loading scene file (async): %s", _scenePath);
 
     {
@@ -169,11 +169,11 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
         impl->nextScene->useScenePosition = _useScenePosition;
     }
 
-    runAsyncTask([scene = impl->nextScene, _platformCallback, &jobQueue = impl->jobQueue, this](){
+    runAsyncTask([scene = impl->nextScene, _platformCallback, _cbData, &jobQueue = impl->jobQueue, this](){
 
             bool ok = SceneLoader::loadScene(scene);
 
-            jobQueue.add([scene, ok, _platformCallback, this]() {
+            jobQueue.add([scene, ok, _platformCallback, _cbData, this]() {
                     {
                         std::lock_guard<std::mutex> lock(impl->sceneMutex);
                         if (scene == impl->nextScene) {
@@ -185,7 +185,7 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
                         auto s = scene;
                         impl->setScene(s);
                         applySceneUpdates();
-                        if (_platformCallback) { _platformCallback(); }
+                        if (_platformCallback) { _platformCallback(_cbData); }
                     }
                 });
         });
