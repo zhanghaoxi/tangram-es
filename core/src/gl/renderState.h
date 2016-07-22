@@ -8,6 +8,23 @@
 
 namespace Tangram {
 
+
+
+// Bind a vertex buffer.
+void bindVertexBuffer(GLuint _id);
+
+// Get the texture slot from a texture unit from 0 to TANGRAM_MAX_TEXTURE_UNIT-1.
+GLuint getTextureUnit(GLuint _unit);
+
+// Bind an index buffer.
+void bindIndexBuffer(GLuint _id);
+
+// Bind a texture for the specified target.
+void bindTexture(GLenum _target, GLuint _textureId);
+
+// Set the currently active texture unit.
+void activeTextureUnit(GLuint _unit);
+
 class RenderState {
 
 public:
@@ -20,21 +37,6 @@ public:
     void increaseGeneration();
 
     bool isValidGeneration(int _generation);
-
-    // Get the texture slot from a texture unit from 0 to TANGRAM_MAX_TEXTURE_UNIT-1.
-    static GLuint getTextureUnit(GLuint _unit);
-
-    // Bind a vertex buffer.
-    static void bindVertexBuffer(GLuint _id);
-
-    // Bind an index buffer.
-    static void bindIndexBuffer(GLuint _id);
-
-    // Bind a texture for the specified target.
-    static void bindTexture(GLenum _target, GLuint _textureId);
-
-    // Set the currently active texture unit.
-    static void activeTextureUnit(GLuint _unit);
 
     // Get the currently active texture unit.
     int currentTextureUnit();

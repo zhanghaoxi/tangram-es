@@ -8,23 +8,23 @@ namespace Tangram {
 
 static size_t max = std::numeric_limits<size_t>::max();
 
-GLuint RenderState::getTextureUnit(GLuint _unit) {
+GLuint getTextureUnit(GLuint _unit) {
     return GL_TEXTURE0 + _unit;
 }
 
-void RenderState::bindVertexBuffer(GLuint _id) {
+void bindVertexBuffer(GLuint _id) {
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _id));
 }
 
-void RenderState::bindIndexBuffer(GLuint _id) {
+void bindIndexBuffer(GLuint _id) {
     GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _id));
 }
 
-void RenderState::bindTexture(GLenum _target, GLuint _textureId) {
+void bindTexture(GLenum _target, GLuint _textureId) {
     GL_CHECK(glBindTexture(_target, _textureId));
 }
 
-void RenderState::activeTextureUnit(GLuint _unit) {
+void activeTextureUnit(GLuint _unit) {
     // current texture unit is changing, invalidate current texture binding:
     // FIXME: texture.init(GL_TEXTURE_2D, max, false);
     GL_CHECK(glActiveTexture(getTextureUnit(_unit)));
