@@ -7,13 +7,7 @@ License:    MIT
 Source0:    %{name}-%{version}.tar.gz
 Source1:    deps.tar.gz
 
-#Requires(post): eglibc
-#Requires(postun): eglibc
-
 BuildRequires:  cmake
-#BuildRequires:  pkgconfig(glib-2.0)
-#BuildRequires:  pkgconfig(gmodule-2.0)
-# BuildRequires: libicu-devel
 BuildRequires:  pkgconfig(dlog)
 BuildRequires: 	pkgconfig(libcurl)
 BuildRequires: 	pkgconfig(icu-uc)
@@ -22,14 +16,8 @@ BuildRequires: 	pkgconfig(harfbuzz)
 BuildRequires: 	pkgconfig(evas)
 BuildRequires: 	pkgconfig(fontconfig)
 
-#BuildRequires:  pkgconfig(capi-network-connection)
-#BuildRequires: 	pkgconfig(capi-maps-service)
-#BuildRequires:  capi-maps-service-plugin-devel
-#BuildRequires:  pkgconfig(json-glib-1.0)
 Requires(post):  /sbin/ldconfig
 Requires(postun):  /sbin/ldconfig
-
-# Requires: libicu = 54.1
 
 %ifarch %{arm}
 %define ARCH arm
@@ -41,7 +29,6 @@ Requires(postun):  /sbin/ldconfig
 Tangram-ES Map Library.
 
 %prep
-# %setup -q
 %setup -q
 
 rmdir external/alfons
@@ -90,32 +77,3 @@ cp LICENSE %{buildroot}/usr/share/license/%{name}
 %defattr(-,root,root,-)
 %{_libdir}/libtangram.so
 /usr/share/license/tangram-es
-
-# %package devel
-# Summary:    Tizen MapsQuest Maps Plug-in Library (Development)
-# Group:      Framework/maps
-# Requires:   %{name} = %{version}-%{release}
-#
-# %description devel
-# Tangram-ES. (Development)
-#
-# %post devel
-# /sbin/ldconfig
-#
-# %postun devel
-# /sbin/ldconfig
-#
-# %files devel
-# %defattr(-,root,root,-)
-# %{_includedir}/mapquest-plugin/*.h
-# %{_libdir}/pkgconfig/maps-plugin-mapquest.pc
-# %{_libdir}/maps/plugins/libmaps-plugin-mapquest.so
-
-# %package test
-# Summary:    Tizen MapQuest Maps Plug-in Library (Internal Dev)
-# Group:      Framework/maps
-# Requires:   capi-maps-service = %{version}-%{release}
-
-# %description test
-# This packages provides Plugin APIs capsulating MapQuest Maps Open APIs for Maps Service Library. (Internal Dev)
-
