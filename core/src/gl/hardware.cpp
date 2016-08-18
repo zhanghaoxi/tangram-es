@@ -51,7 +51,7 @@ void loadExtensions() {
         return;
     }
 
-    supportsMapBuffer = DESKTOP_GL || isAvailable("mapbuffer");
+    supportsMapBuffer = false; //DESKTOP_GL || isAvailable("mapbuffer");
     supportsVAOs = isAvailable("vertex_array_object");
     supportsTextureNPOT = isAvailable("texture_non_power_of_two");
 
