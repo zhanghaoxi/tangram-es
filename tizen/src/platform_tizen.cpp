@@ -17,8 +17,8 @@
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
-#include <fontconfig.h>
 #include <dlog.h>
+#include <fontconfig/fontconfig.h>
 
 #define NUM_WORKERS 4
 
