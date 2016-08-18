@@ -11,6 +11,7 @@
 #include "platform_tizen.h"
 #include "platform_gl.h"
 #include "urlWorker.h"
+#include "gl/hardware.h"
 
 #include <libgen.h>
 #include <unistd.h>
@@ -246,7 +247,5 @@ void setCurrentThreadPriority(int priority){
 }
 
 void initGLExtensions() {
-     // glBindVertexArrayOESEXT = (PFNGLBINDVERTEXARRAYPROC)glfwGetProcAddress("glBindVertexArray");
-     // glDeleteVertexArraysOESEXT = (PFNGLDELETEVERTEXARRAYSPROC)glfwGetProcAddress("glDeleteVertexArrays");
-     // glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSPROC)glfwGetProcAddress("glGenVertexArrays");
+    Tangram::Hardware::supportsMapBuffer = false;
 }

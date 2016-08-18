@@ -8,6 +8,7 @@
 
 #include "urlWorker.h"
 #include "platform_linux.h"
+#include "gl/hardware.h"
 
 #include <libgen.h>
 #include <unistd.h>
@@ -160,4 +161,5 @@ void initGLExtensions() {
      glDeleteVertexArraysOESEXT = (PFNGLDELETEVERTEXARRAYSPROC)glfwGetProcAddress("glDeleteVertexArrays");
      glGenVertexArraysOESEXT = (PFNGLGENVERTEXARRAYSPROC)glfwGetProcAddress("glGenVertexArrays");
 
+     Tangram::Hardware::supportsMapBuffer = true;
 }
