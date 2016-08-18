@@ -12,13 +12,13 @@
 #include "platform_tizen.h"
 #include "platform_gl.h"
 
-#include <dlog/dlog.h>
 
 #include <libgen.h>
 #include <unistd.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
 
+#include <dlog.h>
 #include <fontconfig/fontconfig.h>
 
 
