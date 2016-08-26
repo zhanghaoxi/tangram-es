@@ -100,8 +100,53 @@ unsigned char* bytesFromFile(const char* _path, size_t& _size) {
     return reinterpret_cast<unsigned char *>(cdata);
 }
 
+int extractCurrentFile(unzFile unzipFile) {
+
+}
+
 std::string extractAndGetScenePath(const std::string& path) {
-   return "";
+    // extract with pathname
+    // overwite on extract
+    //
+    std::string extractPath = "/tmp/extractedScene";
+    if (mkdir(extractPath.c_str(), 0775) == -1) {
+        LOGE("%s file not extracted", path.c_str());
+        LOGE("Can not create extract Path dir: %s", extractPath.c_str());
+        return "";
+    }
+
+    unzFile unzipFile = unzOpen64(zipfilename);
+    if (unzipFile) {
+        LOGE("Can not open zip file: %s", path.c_str());
+        return "";
+    }
+
+    if (chdir(extractPath.c_str()) == -1) {
+        LOGE("Can not change to extract dir: %s", extractPath.c_str());
+        return "";
+    }
+
+    // Start Extracting files
+    {
+        int err = unzGoToFirstFile(unzipFile);
+        if (err != UNZ_OK) {
+            LOGE("Error going to first file in zip using \"unzGoToFirstFile\"");
+            return "";
+        }
+
+        do {
+            err = extract_currentfile(unzipFile);
+            if (err != UNZ_OK) { break; }
+            err = unzGoToNextFile(unzipFile);
+        } while (err == UNZ_OK);
+
+        if (err == UNZ_END_OF_LIST_OF_FILE) {
+            LOGE("Error extracting files from %s", path.c_str());
+            return "";
+        }
+    }
+
+    return extractPath;
 }
 
 // No system fonts implementation (yet!)
