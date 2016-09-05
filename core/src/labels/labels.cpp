@@ -275,7 +275,7 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
         do {
             if (l->isOccluded()) {
                 // Update BBox for anchor fallback
-                l->updateBBoxes(_viewState.fractZoom);
+                l->updateBBoxes(_viewState.fractZoom, l->occludedLastFrame());
                 if (anchorIndex == l->anchorIndex()) {
                     // Reached first anchor again
                     break;
@@ -317,6 +317,9 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
             if (l->parent() && l->options().required) {
                 l->parent()->occlude();
             }
+        } else if (l->occludedLastFrame()){
+            // Update bbox to non-occluded state
+            l->updateBBoxes(_viewState.fractZoom, false);
         }
 
         if (l->options().repeatDistance > 0.f) {
@@ -403,8 +406,8 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const ViewState& _viewS
                 if (!options.interactive) { continue; }
 
                 if (!_visibleOnly) {
-                    label->updateScreenTransform(mvp, _viewState, false);
-                    label->updateBBoxes(_viewState.fractZoom);
+                    label->updateScreenTransform(mvp, screenSize, false);
+                    label->updateBBoxes(_viewState.fractZoom, label->occludedLastFrame());
                 } else if (!label->visibleState()) {
                     continue;
                 }

@@ -209,7 +209,7 @@ bool Label::update(const glm::mat4& _mvp, const ViewState& _viewState, bool _dra
     }
 
     // update the view-space bouding box
-    updateBBoxes(_viewState.fractZoom);
+    updateBBoxes(_viewState.fractZoom, m_occludedLastFrame);
 
     // checks whether the label is out of the viewport
     if (offViewport(_viewState.viewportSize)) {

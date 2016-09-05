@@ -113,11 +113,11 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
     return true;
 }
 
-void TextLabel::updateBBoxes(float _zoomFract) {
+void TextLabel::updateBBoxes(float _zoomFract, bool _occluded) {
 
     glm::vec2 dim = m_dim - m_options.buffer;
 
-    if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
+    if (_occluded) { dim += Label::activation_distance_threshold; }
 
     // FIXME: Only for testing
     if (state() == State::dead) { dim -= 4; }

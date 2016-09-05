@@ -113,6 +113,11 @@ public:
 
     bool evalState(float _dt);
 
+    // Update the screen position of the label
+    bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels);
+
+    virtual void updateBBoxes(float _zoomFract, bool _occluded = false) = 0;
+
     // Occlude the label
     void occlude(bool _occlusion = true) { m_occluded = _occlusion; }
 

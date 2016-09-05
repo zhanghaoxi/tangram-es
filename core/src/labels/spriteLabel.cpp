@@ -104,7 +104,7 @@ bool SpriteLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& 
     return true;
 }
 
-void SpriteLabel::updateBBoxes(float _zoomFract) {
+void SpriteLabel::updateBBoxes(float _zoomFract, bool _occluded) {
     glm::vec2 dim;
 
     if (m_options.flat) {
@@ -122,7 +122,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
 
         dim = glm::vec2(maxx - minx, maxy - miny);
 
-        if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
+        if (_occluded) { dim += Label::activation_distance_threshold; }
 
         // TODO: Manage extrude scale
 
@@ -132,7 +132,7 @@ void SpriteLabel::updateBBoxes(float _zoomFract) {
     } else {
         dim = m_dim + glm::vec2(m_extrudeScale * 2.f * _zoomFract);
 
-        if (m_occludedLastFrame) { dim += Label::activation_distance_threshold; }
+        if (_occluded) { dim += Label::activation_distance_threshold; }
 
         m_obb = OBB(m_screenTransform.position, m_screenTransform.rotation, dim.x, dim.y);
     }
