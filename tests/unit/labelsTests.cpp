@@ -298,9 +298,9 @@ TEST_CASE( "Regression Test Issue 936", "[Labels]" ) {
         other->print();
         LOG("");
 
-        REQUIRE(parent->isOccluded() == false);
-        REQUIRE(child->isOccluded() == false);
-        REQUIRE(other->isOccluded() == true);
+        REQUIRE(parent->isOccluded() == true);
+        REQUIRE(child->isOccluded() == true);
+        REQUIRE(other->isOccluded() == false);
     }
 
     {
@@ -340,9 +340,9 @@ TEST_CASE( "Regression Test Issue 936", "[Labels]" ) {
         other->print();
         LOG("");
 
-        REQUIRE(parent->isOccluded() == false);
-        REQUIRE(child->isOccluded() == false);
-        REQUIRE(other->isOccluded() == true);
+        REQUIRE(parent->isOccluded() == true);
+        REQUIRE(child->isOccluded() == true);
+        REQUIRE(other->isOccluded() == false);
 
     }
 
