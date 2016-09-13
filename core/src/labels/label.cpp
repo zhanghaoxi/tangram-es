@@ -162,6 +162,10 @@ void Label::print() const {
     LOG("\tm_state: %s", state.c_str());
     LOG("\tm_anchorIndex: %d", m_anchorIndex);
     LOG("\tscreenPos: %f/%f", m_screenTransform.position.x, m_screenTransform.position.y);
+    auto bbox = m_obb.getExtent();
+    LOG("\tbbox: %f/%f %f/%f", bbox.min.x, bbox.min.y, bbox.max.x, bbox.max.y);
+    auto& q = m_obb.getQuad();
+    LOG("\tobb: %f/%f %f/%f %f/%f %f/%f", q[0].x, q[0].y, q[1].x, q[1].y, q[2].x, q[2].y, q[3].x, q[3].y);
 
 }
 
