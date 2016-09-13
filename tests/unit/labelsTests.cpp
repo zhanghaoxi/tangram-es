@@ -4,6 +4,7 @@
 #include "scene/scene.h"
 #include "style/style.h"
 #include "style/textStyle.h"
+#include "style/pointStyle.h"
 #include "labels/labels.h"
 #include "labels/textLabel.h"
 #include "labels/textLabels.h"
@@ -11,6 +12,7 @@
 
 #include "view/view.h"
 #include "tile/tile.h"
+#include "log.h"
 
 #include <memory>
 
@@ -19,18 +21,47 @@ namespace Tangram {
 TextStyle dummyStyle("textStyle", nullptr);
 TextLabels dummy(dummyStyle);
 
-std::unique_ptr<TextLabel> makeLabel(glm::vec2 _transform, Label::Type _type, std::string id) {
+
+std::unique_ptr<TextLabel> makeLabel(glm::vec2 _transform, Label::Type _type,
+                                     std::string id, float priority = 0,
+                                     glm::vec2 dim = {10, 10},
+                                     LabelProperty::Anchor anchor = LabelProperty::Anchor::center,
+                                     bool required = false) {
     Label::Options options;
+    options.required = required;
+    options.priority = priority;
     options.offset = {0.0f, 0.0f};
     options.properties = std::make_shared<Properties>();
     options.properties->set("id", id);
     options.interactive = true;
-    options.anchors.anchor[0] = LabelProperty::Anchor::center;
+    options.collide = true;
+    options.anchors.anchor[0] = anchor;
     options.anchors.count = 1;
 
     return std::unique_ptr<TextLabel>(new TextLabel({glm::vec3(_transform, 0)}, _type, options,
                                                     {}, {10, 10}, dummy, {},
                                                     TextLabelProperty::Align::none));
+}
+
+std::unique_ptr<SpriteLabel> makeSpriteLabel(glm::vec2 _transform,
+                                           std::string id, float priority = 0,
+                                           LabelProperty::Anchor anchor = LabelProperty::Anchor::center) {
+    static const PointStyle dummyStyle("pointStyle", nullptr);
+
+    static SpriteLabels dummy(dummyStyle);
+
+    Label::Options options;
+    options.priority = priority;
+    options.offset = {0.0f, 0.0f};
+    options.properties = std::make_shared<Properties>();
+    options.properties->set("id", id);
+    options.interactive = true;
+    options.collide = true;
+    options.anchors.anchor[0] = anchor;
+    options.anchors.count = 1;
+
+    return std::unique_ptr<SpriteLabel>(new SpriteLabel(glm::vec3(_transform, 0), {10, 10}, options,
+                                                        1, nullptr, dummy, 0));
 }
 
 TextLabel makeLabelWithAnchorFallbacks(glm::vec2 _transform, glm::vec2 _offset = {0, 0}) {
@@ -203,4 +234,140 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
 
 }
 
+TEST_CASE( "Regression Test Issue 936", "[Labels]" ) {
+
+    View view(256, 256);
+    view.setPosition(0, 0);
+    view.setZoom(0);
+    view.update(false);
+
+    Tile tile({0,0,0}, view.getMapProjection());
+    tile.update(0, view);
+
+    glm::vec2 screenSize = glm::vec2(view.getWidth(), view.getHeight());
+
+    class TestLabels : public Labels {
+    public:
+        TestLabels(View& _v) {
+            m_isect2d.resize({1, 1}, {_v.getWidth(), _v.getHeight()});
+        }
+        void addLabel(Label* _l, Tile* _t) { m_labels.push_back({_l, _t, false}); }
+        void run(View& _v) {
+            sortLabels();
+            handleOcclusions(_v.state());
+        }
+        void clear() { m_labels.clear(); }
+    };
+
+    TestLabels labels(view);
+
+
+
+    auto parent = makeSpriteLabel(glm::vec2{0.0,1.0}, "A", 0);
+    auto child = makeLabel(glm::vec2{0.0,1.0},
+                           Label::Type::point, "B", 2, {10, 10},
+                           LabelProperty::Anchor::bottom, true);
+
+    float offset = 14.5/256.;
+    auto other = makeLabel({glm::vec2{0.0, 1.0 - offset}, glm::vec2{0.0 + offset, 1.0}},
+                           Label::Type::line, "C", 1, glm::vec2{14,1});
+
+    child->setParent(*parent, false, false);
+
+    parent->occlude();
+    child->occlude();
+    other->occlude();
+
+    labels.addLabel(&*parent, &tile);
+    labels.addLabel(&*child, &tile);
+    labels.addLabel(&*other, &tile);
+
+    {
+        parent->update(tile.mvp(), view.state(), true);
+        child->update(tile.mvp(), view.state(), true);
+        other->update(tile.mvp(), view.state(), true);
+
+        labels.run(view);
+
+        parent->evalState(0);
+        child->evalState(0);
+        other->evalState(0);
+
+        parent->print();
+        child->print();
+        other->print();
+        LOG("");
+
+        REQUIRE(parent->isOccluded() == false);
+        REQUIRE(child->isOccluded() == false);
+        REQUIRE(other->isOccluded() == true);
+    }
+
+    {
+        parent->update(tile.mvp(), view.state(), true);
+        child->update(tile.mvp(), view.state(), true);
+        other->update(tile.mvp(), view.state(), true);
+
+        labels.run(view);
+
+        parent->evalState(0);
+        child->evalState(0);
+        other->evalState(0);
+
+        parent->print();
+        child->print();
+        other->print();
+        LOG("");
+
+        REQUIRE(parent->isOccluded() == true);
+        REQUIRE(child->isOccluded() == true);
+        REQUIRE(other->isOccluded() == false);
+    }
+
+    {
+        parent->update(tile.mvp(), view.state(), true);
+        child->update(tile.mvp(), view.state(), true);
+        other->update(tile.mvp(), view.state(), true);
+
+        labels.run(view);
+
+        parent->evalState(0);
+        child->evalState(0);
+        other->evalState(0);
+
+        parent->print();
+        child->print();
+        other->print();
+        LOG("");
+
+        REQUIRE(parent->isOccluded() == false);
+        REQUIRE(child->isOccluded() == false);
+        REQUIRE(other->isOccluded() == true);
+
+    }
+
+    {
+        parent->update(tile.mvp(), view.state(), true);
+        child->update(tile.mvp(), view.state(), true);
+        other->update(tile.mvp(), view.state(), true);
+
+        labels.run(view);
+
+        parent->evalState(0);
+        child->evalState(0);
+        other->evalState(0);
+
+        parent->print();
+        child->print();
+        other->print();
+        LOG("");
+
+        REQUIRE(parent->isOccluded() == true);
+        REQUIRE(child->isOccluded() == true);
+        REQUIRE(other->isOccluded() == false);
+
+    }
+
+
+}
 }
