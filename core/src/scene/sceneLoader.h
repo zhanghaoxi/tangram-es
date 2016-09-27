@@ -45,7 +45,7 @@ struct SceneLoader {
     static bool applyConfig(Node& config, const std::shared_ptr<Scene>& scene);
     static void applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates);
     static void applyUpdate(Node& root, const std::vector<std::string>& keys, Node value);
-    static void applyGlobalProperties(Node& node, const std::shared_ptr<Scene>& scene, const std::string& keys = "");
+    static void applyGlobalProperties(Node& node, const std::shared_ptr<Scene>& scene);
     static void applyGlobalRefUpdates(Node& node, const std::shared_ptr<Scene>& scene);
 
     /*** all public for testing ***/

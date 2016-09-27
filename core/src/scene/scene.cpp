@@ -71,20 +71,20 @@ Scene::Scene(const Scene& _other)
 
 Scene::~Scene() {}
 
-bool Scene::removeGlobalRef(const std::string& key) {
-    bool found = false;
-    for (auto& globalRef : m_referencedGlobals) {
-        if (globalRef.first == key) {
-            globalRef.swap(m_referencedGlobals.back());
-            m_referencedGlobals.pop_back();
-            LOG("Found keys: %s", key.c_str());
-            found = true;
-            break;
-        }
-    }
+/*bool Scene::removeGlobalRef(YAML::Node node) {*/
+    //bool found = false;
+    //for (auto& globalRef : m_referencedGlobals) {
+        //if (globalRef.first.is(node)) {
+            //globalRef.swap(m_referencedGlobals.back());
+            //m_referencedGlobals.pop_back();
+            //LOG("Found global ref node to be removed");
+            //found = true;
+            //break;
+        //}
+    //}
 
-    return found;
-}
+    //return found;
+/*}*/
 
 const Style* Scene::findStyle(const std::string& _name) const {
 

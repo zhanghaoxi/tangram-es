@@ -102,10 +102,20 @@ void SceneLoader::applyUpdate(Node& root, const std::vector<std::string>& keys, 
     }
 }
 
+/*Node compileNodeFromKeys(const std::string& key) {*/
+    //Node node;
+    //auto keys = splitString(key, COMPONENT_PATH_DELIMITER);
+    //for (auto& k : keys) {
+        //node.reset(node[k]);
+    //}
+    //return node;
+/*}*/
+
 void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& updates) {
     auto& root = scene.config();
     for (const auto& update : updates) {
-        scene.removeGlobalRef(update.keys);
+        //auto node = compileNodeFromKeys(update.keys);
+        //scene.removeGlobalRef(node);
         auto keys = splitString(update.keys, COMPONENT_PATH_DELIMITER);
         try {
             auto valueNode = YAML::Load(update.value);
@@ -117,9 +127,9 @@ void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& upd
 }
 
 void SceneLoader::applyGlobalRefUpdates(Node& root, const std::shared_ptr<Scene>& scene) {
-    for (const auto& referencedGlobal : scene->referencedGlobals()) {
-        auto keys = splitString(referencedGlobal.first, COMPONENT_PATH_DELIMITER);
-        applyUpdate(root, keys, referencedGlobal.second);
+    for (auto& referencedGlobal : scene->referencedGlobals()) {
+        // Check if a global exists with the second key value, if so apply it to first
+        referencedGlobal.first = referencedGlobal.second;
     }
 }
 
@@ -132,38 +142,34 @@ void printFilters(const SceneLayer& layer, int indent){
     }
 };
 
-void SceneLoader::applyGlobalProperties(Node& node, const std::shared_ptr<Scene>& scene, const std::string& keys) {
+void SceneLoader::applyGlobalProperties(Node& node, const std::shared_ptr<Scene>& scene) {
     switch(node.Type()) {
-    case NodeType::Scalar:
-        {
-            std::string key = node.Scalar();
-            if (key.compare(0, 7, "global.") == 0) {
-                key.replace(0, 7, "");
-                std::replace(key.begin(), key.end(), '.', DELIMITER[0]);
-                node = scene->globals()[key];
-                scene->referencedGlobals().emplace_back(keys, scene->globals()[key]);
-            }
-        }
-        break;
-    case NodeType::Sequence:
-        {
-            int i = 0;
-            for (auto n : node) {
-                std::string k = keys + COMPONENT_PATH_DELIMITER + std::to_string(i);
-                applyGlobalProperties(n, scene, k);
-                i++;
+        case NodeType::Scalar:
+            {
+                std::string key = node.Scalar();
+                if (key.compare(0, 7, "global.") == 0) {
+                    key.replace(0, 7, "");
+                    std::replace(key.begin(), key.end(), '.', DELIMITER[0]);
+                    // TODO: maybe better to have (YAML::Node, key) stored here!
+                    scene->referencedGlobals().emplace_back(node, scene->globals()[key]);
+                    node = scene->globals()[key];
+                }
             }
             break;
-        }
-    case NodeType::Map:
-        for (auto n : node) {
-            std::string k = (n.first.IsScalar()) ? n.first.Scalar() : "";
-            k = (keys.size() > 0) ? (keys + COMPONENT_PATH_DELIMITER + k) : k;
-            applyGlobalProperties(n.second, scene, k);
-        }
-        break;
-    default:
-        break;
+        case NodeType::Sequence:
+            {
+                for (auto n : node) {
+                    applyGlobalProperties(n, scene);
+                }
+                break;
+            }
+        case NodeType::Map:
+            for (auto n : node) {
+                applyGlobalProperties(n.second, scene);
+            }
+            break;
+        default:
+            break;
     }
 }
 

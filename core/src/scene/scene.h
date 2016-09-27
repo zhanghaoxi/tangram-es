@@ -75,7 +75,7 @@ public:
     auto& fontContext() { return m_fontContext; }
     auto& globals() { return m_globals; }
     auto& referencedGlobals() { return m_referencedGlobals; }
-    bool removeGlobalRef(const std::string& key);
+    //bool removeGlobalRef(YAML::Node ref);
     Style* findStyle(const std::string& _name);
 
     const auto& path() const { return m_path; }
@@ -140,7 +140,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
     // save the YAML Nodes for which global values have been swapped
-    std::vector<std::pair<std::string, YAML::Node>> m_referencedGlobals;
+    std::vector<std::pair<YAML::Node, YAML::Node>> m_referencedGlobals;
 
     // Container of all strings used in styling rules; these need to be
     // copied and compared frequently when applying styling, so rules use
