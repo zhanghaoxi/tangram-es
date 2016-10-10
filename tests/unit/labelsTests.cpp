@@ -22,7 +22,7 @@ TextStyle dummyStyle("textStyle", nullptr);
 TextLabels dummy(dummyStyle);
 
 
-std::unique_ptr<TextLabel> makeLabel(glm::vec2 _transform, Label::Type _type,
+std::unique_ptr<TextLabel> makeLabel(Label::WorldTransform _transform, Label::Type _type,
                                      std::string id, float priority = 0,
                                      glm::vec2 dim = {10, 10},
                                      LabelProperty::Anchor anchor = LabelProperty::Anchor::center,
@@ -38,12 +38,12 @@ std::unique_ptr<TextLabel> makeLabel(glm::vec2 _transform, Label::Type _type,
     options.anchors.anchor[0] = anchor;
     options.anchors.count = 1;
 
-    return std::unique_ptr<TextLabel>(new TextLabel({glm::vec3(_transform, 0)}, _type, options,
+    return std::unique_ptr<TextLabel>(new TextLabel(_transform, _type, options,
                                                     {}, {10, 10}, dummy, {},
                                                     TextLabelProperty::Align::none));
 }
 
-std::unique_ptr<SpriteLabel> makeSpriteLabel(glm::vec2 _transform,
+std::unique_ptr<SpriteLabel> makeSpriteLabel(Label::WorldTransform _transform,
                                            std::string id, float priority = 0,
                                            LabelProperty::Anchor anchor = LabelProperty::Anchor::center) {
     static const PointStyle dummyStyle("pointStyle", nullptr);
@@ -60,11 +60,11 @@ std::unique_ptr<SpriteLabel> makeSpriteLabel(glm::vec2 _transform,
     options.anchors.anchor[0] = anchor;
     options.anchors.count = 1;
 
-    return std::unique_ptr<SpriteLabel>(new SpriteLabel(glm::vec3(_transform, 0), {10, 10}, options,
+    return std::unique_ptr<SpriteLabel>(new SpriteLabel(_transform, {10, 10}, options,
                                                         1, nullptr, dummy, 0));
 }
 
-TextLabel makeLabelWithAnchorFallbacks(glm::vec2 _transform, glm::vec2 _offset = {0, 0}) {
+TextLabel makeLabelWithAnchorFallbacks(Label::WorldTransform _transform, glm::vec2 _offset = {0, 0}) {
     Label::Options options;
 
     // options.anchors.anchor[0] = LabelProperty::Anchor::center;
@@ -78,7 +78,7 @@ TextLabel makeLabelWithAnchorFallbacks(glm::vec2 _transform, glm::vec2 _offset =
 
     TextRange textRanges;
 
-    return TextLabel({ glm::vec3(_transform, 0)}, Label::Type::point, options,
+    return TextLabel(_transform, Label::Type::point, options,
             {}, {10, 10}, dummy, textRanges, TextLabelProperty::Align::none);
 }
 
@@ -98,9 +98,9 @@ TEST_CASE("Test getFeaturesAtPoint", "[Labels][FeaturePicking]") {
     auto textStyle = std::unique_ptr<TextStyle>(new TextStyle("test", nullptr, false));
     textStyle->setID(0);
 
-    labelMesh->addLabel(makeLabel(glm::vec2{.5f,.5f}, Label::Type::point, "0"));
-    labelMesh->addLabel(makeLabel(glm::vec2{1,0}, Label::Type::point, "1"));
-    labelMesh->addLabel(makeLabel(glm::vec2{1,1}, Label::Type::point, "2"));
+    labelMesh->addLabel(makeLabel(glm::vec3{.5f,.5f,0}, Label::Type::point, "0"));
+    labelMesh->addLabel(makeLabel(glm::vec3{1,0,0}, Label::Type::point, "1"));
+    labelMesh->addLabel(makeLabel(glm::vec3{1,1,0}, Label::Type::point, "2"));
 
     std::shared_ptr<Tile> tile(new Tile({0,0,0}, view.getMapProjection()));
     tile->initGeometry(1);
@@ -154,11 +154,11 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
     TestLabels labels(view);
 
     {
-        TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
+        TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec3{0.5,0.5,0});
         l1.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l1, &tile);
 
-        TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
+        TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec3{0.5,0.5,0});
         l2.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l2, &tile);
 
@@ -172,12 +172,12 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
     labels.clear();
 
     {
-        TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
+        TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec3{0.5,0.5,0});
         l1.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l1, &tile);
 
         // Second label is one pixel left of L1
-        TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5 - 1./256,0.5});
+        TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec3{0.5 - 1./256,0.5,0});
         l2.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l2, &tile);
 
@@ -194,12 +194,12 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
     labels.clear();
 
     {
-        TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
+        TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec3{0.5,0.5,0});
         l1.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l1, &tile);
 
         // Second label is 10 pixel top of L1
-        TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5 + 10./256});
+        TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec3{0.5,0.5 + 10./256,0});
         l2.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l2, &tile);
 
@@ -214,12 +214,12 @@ TEST_CASE( "Test anchor fallback behavior", "[Labels][AnchorFallback]" ) {
     labels.clear();
 
     {
-        TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5});
+        TextLabel l1 = makeLabelWithAnchorFallbacks(glm::vec3{0.5,0.5,0});
         l1.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l1, &tile);
 
         // Second label is 10 pixel below of L1
-        TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec2{0.5,0.5 - 10./256});
+        TextLabel l2 = makeLabelWithAnchorFallbacks(glm::vec3{0.5,0.5 - 10./256,0});
         l2.update(tile.mvp(), view.state(), true);
         labels.addLabel(&l2, &tile);
 
@@ -244,8 +244,6 @@ TEST_CASE( "Regression Test Issue 936", "[Labels]" ) {
     Tile tile({0,0,0}, view.getMapProjection());
     tile.update(0, view);
 
-    glm::vec2 screenSize = glm::vec2(view.getWidth(), view.getHeight());
-
     class TestLabels : public Labels {
     public:
         TestLabels(View& _v) {
@@ -263,8 +261,8 @@ TEST_CASE( "Regression Test Issue 936", "[Labels]" ) {
 
 
 
-    auto parent = makeSpriteLabel(glm::vec2{0.0,1.0}, "A", 0);
-    auto child = makeLabel(glm::vec2{0.0,1.0},
+    auto parent = makeSpriteLabel(glm::vec3{0.0,1.0,0}, "A", 0);
+    auto child = makeLabel(glm::vec3{0.0,1.0,0},
                            Label::Type::point, "B", 2, {10, 10},
                            LabelProperty::Anchor::bottom, true);
 
