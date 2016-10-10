@@ -102,10 +102,11 @@ public:
     // Add vertices for this label to its Style's shared Mesh
     virtual void addVerticesToMesh() = 0;
     virtual glm::vec2 center() const;
-    virtual void updateBBoxes(float _zoomFract) = 0;
 
     // Update the screen position of the label
     virtual bool updateScreenTransform(const glm::mat4& _mvp, const ViewState& _viewState, bool _drawAllLabels) = 0;
+
+    virtual void updateBBoxes(float _zoomFract, bool _occluded = false) = 0;
 
     bool update(const glm::mat4& _mvp,
                 const ViewState& _viewState,
@@ -115,8 +116,6 @@ public:
 
     // Update the screen position of the label
     bool updateScreenTransform(const glm::mat4& _mvp, const glm::vec2& _screenSize, bool _drawAllLabels);
-
-    virtual void updateBBoxes(float _zoomFract, bool _occluded = false) = 0;
 
     // Occlude the label
     void occlude(bool _occlusion = true) { m_occluded = _occlusion; }

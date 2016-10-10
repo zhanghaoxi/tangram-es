@@ -406,7 +406,7 @@ const std::vector<TouchItem>& Labels::getFeaturesAtPoint(const ViewState& _viewS
                 if (!options.interactive) { continue; }
 
                 if (!_visibleOnly) {
-                    label->updateScreenTransform(mvp, screenSize, false);
+                    label->updateScreenTransform(mvp, _viewState, false);
                     label->updateBBoxes(_viewState.fractZoom, label->occludedLastFrame());
                 } else if (!label->visibleState()) {
                     continue;
