@@ -60,7 +60,7 @@ public:
     JobQueue jobQueue;
     View view;
     Labels labels;
-    std::unique_ptr<AsyncWorker> asyncWorker{};
+    std::unique_ptr<AsyncWorker> asyncWorker = std::make_unique<AsyncWorker>();
     InputHandler inputHandler{view};
     TileWorker tileWorker{MAX_WORKERS};
     TileManager tileManager{tileWorker};
