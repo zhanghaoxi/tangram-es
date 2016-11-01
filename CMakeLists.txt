@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8.12)
 
 project(tangram)
 
@@ -12,10 +12,10 @@ else()
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/harfbuzz-icu-freetype/harfbuzz/README")
-    message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init --recursive'")
-    return()
-endif()
+#if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/harfbuzz-icu-freetype/harfbuzz/README")
+#    message(SEND_ERROR "Missing submodules - Please run:\n 'git submodule update --init --recursive'")
+#    return()
+#endif()
 
 set(APPLICATION ON)
 
@@ -31,7 +31,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # platform lookup
-set(SUPPORTED_TARGETS darwin ios android raspberrypi linux tizen ios.framework)
+set(SUPPORTED_TARGETS darwin ios android raspberrypi linux tizen tizen-lib ios.framework)
 
 if(NOT PLATFORM_TARGET)
     string(TOLOWER "${CMAKE_SYSTEM_NAME}" varplatform)
