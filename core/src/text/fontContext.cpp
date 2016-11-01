@@ -43,12 +43,12 @@ void FontContext::loadFonts() {
                 m_font[i] = m_alfons.addFont("default", alfons::InputSource(systemFont), size);
             }
         } else {
+          LOG("Loading default font file %s", DEFAULT);
+
             size_t dataSize;
             char* data = reinterpret_cast<char*>(bytesFromFile(DEFAULT, dataSize));
 
             if (data) {
-                LOG("Loading default font file %s", DEFAULT);
-
                 for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
                     m_font[i] = m_alfons.addFont("default", alfons::InputSource(data, dataSize), size);
                 }
@@ -56,6 +56,11 @@ void FontContext::loadFonts() {
                 free(data);
             } else {
                 LOGW("Default font %s not found", DEFAULT);
+
+                // Must create empty font - or return here
+                for (int i = 0, size = BASE_SIZE; i < MAX_STEPS; i++, size += STEP_SIZE) {
+                    m_font[i] = m_alfons.getFont("default", size);
+                }
             }
         }
     }
