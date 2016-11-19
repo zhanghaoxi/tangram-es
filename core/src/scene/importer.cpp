@@ -15,6 +15,8 @@ std::atomic_uint Importer::progressCounter(0);
 
 Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) {
 
+    clock_t begin = clock();
+
     Url path;
     Url rootScenePath = scenePath.resolved(resourceRoot);
 
@@ -66,11 +68,18 @@ Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) 
         }
     }
 
+    float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    LOG("---------- load yamls %f", loadTime);
+    begin = clock();
+
     Node root = Node();
 
     LOGD("Processing scene import Stack:");
     std::vector<Url> sceneStack;
     importScenesRecursive(root, rootScenePath, sceneStack);
+
+    loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    LOG("---------- apply imports %f", loadTime);
 
     return root;
 }

@@ -167,8 +167,16 @@ void StyleContext::initFunctions(const Scene& _scene) {
     }
     m_sceneId = _scene.id;
 
+    clock_t begin = clock();
     setSceneGlobals(_scene.config()["global"]);
+    float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    LOG("--------js globals: %f", loadTime);
+
+    begin = clock();
     setFunctions(_scene.functions());
+
+    loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    LOG("--------js functions: %f", loadTime);
 }
 
 bool StyleContext::setFunctions(const std::vector<std::string>& _functions) {

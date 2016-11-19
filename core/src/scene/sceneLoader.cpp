@@ -54,14 +54,26 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
 
     Importer sceneImporter;
 
+    clock_t begin = clock();
+
     _scene->config() = sceneImporter.applySceneImports(_scene->path(), _scene->resourceRoot());
 
-    if (_scene->config()) {
+    float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    LOG("--------load %f", loadTime);
 
+    if (_scene->config()) {
+        begin = clock();
         // Load font resources
         _scene->fontContext()->loadFonts();
 
+        loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+        LOG("--------fonts %f", loadTime);
+
+        begin = clock();
         applyConfig(_scene);
+
+        loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+        LOG("--------apply %f", loadTime);
 
         return true;
     }
@@ -255,9 +267,15 @@ bool SceneLoader::applyConfig(const std::shared_ptr<Scene>& _scene) {
         _scene->animated(animated.as<bool>());
     }
 
+
+    begin = clock();
+
     for (auto& style : _scene->styles()) {
         style->build(*_scene);
     }
+
+    loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    LOG("--------build styles %f", loadTime);
 
     return true;
 }
