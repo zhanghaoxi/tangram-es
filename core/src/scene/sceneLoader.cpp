@@ -510,7 +510,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, const std::sh
     return matTex;
 }
 
-bool SceneLoader::extractTexFiltering(Node& filtering, TextureFiltering& filter) {
+bool SceneLoader::extractTexFiltering(const Node& filtering, TextureFiltering& filter) {
     const std::string& textureFiltering = filtering.Scalar();
     if (textureFiltering == "linear") {
         filter.min = filter.mag = GL_LINEAR;
@@ -1008,7 +1008,7 @@ void SceneLoader::loadSourceRasters(std::shared_ptr<DataSource> &source, Node ra
     }
 }
 
-void SceneLoader::parseLightPosition(Node position, PointLight& light) {
+void SceneLoader::parseLightPosition(const Node& position, PointLight& light) {
     if (position.IsSequence()) {
         UnitVec<glm::vec3> lightPos;
         std::string positionSequence;
@@ -1216,7 +1216,7 @@ void SceneLoader::loadCamera(const Node& _camera, const std::shared_ptr<Scene>& 
     _scene->startZoom = z;
 }
 
-void SceneLoader::loadCameras(Node _cameras, const std::shared_ptr<Scene>& _scene) {
+void SceneLoader::loadCameras(const Node& _cameras, const std::shared_ptr<Scene>& _scene) {
 
     // To correctly match the behavior of the webGL library we'll need a place
     // to store multiple view instances.  Since we only have one global view
@@ -1228,7 +1228,7 @@ void SceneLoader::loadCameras(Node _cameras, const std::shared_ptr<Scene>& _scen
     }
 }
 
-Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
+Filter SceneLoader::generateFilter(const Node& _filter, Scene& scene) {
 
     switch (_filter.Type()) {
     case NodeType::Scalar: {
@@ -1275,7 +1275,7 @@ Filter SceneLoader::generateFilter(Node _filter, Scene& scene) {
     }
 }
 
-Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
+Filter SceneLoader::generatePredicate(const Node& _node, std::string _key) {
 
     switch (_node.Type()) {
     case NodeType::Scalar: {
@@ -1335,7 +1335,7 @@ Filter SceneLoader::generatePredicate(Node _node, std::string _key) {
     }
 }
 
-Filter SceneLoader::generateAnyFilter(Node _filter, Scene& scene) {
+Filter SceneLoader::generateAnyFilter(const Node& _filter, Scene& scene) {
 
     if (_filter.IsSequence()) {
         std::vector<Filter> filters;
@@ -1350,7 +1350,7 @@ Filter SceneLoader::generateAnyFilter(Node _filter, Scene& scene) {
     return Filter();
 }
 
-Filter SceneLoader::generateAllFilter(Node _filter, Scene& scene) {
+Filter SceneLoader::generateAllFilter(const Node& _filter, Scene& scene) {
 
     if (_filter.IsSequence()) {
         std::vector<Filter> filters;
@@ -1365,7 +1365,7 @@ Filter SceneLoader::generateAllFilter(Node _filter, Scene& scene) {
     return Filter();
 }
 
-Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
+Filter SceneLoader::generateNoneFilter(const Node& _filter, Scene& scene) {
 
     if (_filter.IsSequence()) {
         std::vector<Filter> filters;
@@ -1386,17 +1386,18 @@ Filter SceneLoader::generateNoneFilter(Node _filter, Scene& scene) {
     return Filter();
 }
 
-void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& scene, const std::string& prefix,
+void SceneLoader::parseStyleParams(const Node& params, const std::shared_ptr<Scene>& scene, const std::string& prefix,
                                    std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
 
         std::string key;
         if (!prefix.empty()) {
-            key = prefix + DELIMITER + prop.first.Scalar();
-        } else {
-            key = prop.first.Scalar();
+            key = prefix;
+            key += DELIMITER;
         }
+        key += prop.first.Scalar();
+
         if (key == "transition" || key == "text:transition") {
             parseTransition(prop.second, scene, key, out);
             continue;
@@ -1407,7 +1408,7 @@ void SceneLoader::parseStyleParams(Node params, const std::shared_ptr<Scene>& sc
             out.push_back(StyleParam{ StyleParamKey::point_text, "" });
         }
 
-        Node value = prop.second;
+        const Node& value = prop.second;
 
         switch (value.Type()) {
         case NodeType::Scalar: {
@@ -1550,7 +1551,8 @@ bool SceneLoader::parseStyleUniforms(const Node& value, const std::shared_ptr<Sc
     return true;
 }
 
-void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& scene, std::string _prefix, std::vector<StyleParam>& out) {
+void SceneLoader::parseTransition(const Node& params, const std::shared_ptr<Scene>& scene,
+                                  std::string _prefix, std::vector<StyleParam>& out) {
 
     for (const auto& prop : params) {
         if (!prop.first) { continue; }
@@ -1583,7 +1585,7 @@ void SceneLoader::parseTransition(Node params, const std::shared_ptr<Scene>& sce
     }
 }
 
-SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, const std::shared_ptr<Scene>& scene) {
+SceneLayer SceneLoader::loadSublayer(const Node& layer, const std::string& layerName, const std::shared_ptr<Scene>& scene) {
 
     std::vector<SceneLayer> sublayers;
     std::vector<DrawRuleData> rules;
@@ -1598,7 +1600,7 @@ SceneLayer SceneLoader::loadSublayer(Node layer, const std::string& layerName, c
             // Ignored for sublayers
         } else if (key == "draw") {
             // Member is a mapping of draw rules
-            for (auto& ruleNode : member.second) {
+            for (const auto& ruleNode : member.second) {
 
                 std::vector<StyleParam> params;
                 parseStyleParams(ruleNode.second, scene, "", params);
@@ -1665,7 +1667,7 @@ void SceneLoader::loadLayer(const std::pair<Node, Node>& layer, const std::share
     scene->layers().push_back({ std::move(sublayer), source, collections });
 }
 
-void SceneLoader::loadBackground(Node background, const std::shared_ptr<Scene>& scene) {
+void SceneLoader::loadBackground(const Node& background, const std::shared_ptr<Scene>& scene) {
 
     if (!background) { return; }
 
