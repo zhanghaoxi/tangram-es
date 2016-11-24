@@ -48,6 +48,8 @@ static const char DELIMITER = ':';
 // TODO: make this configurable: 16MB default in-memory DataSource cache:
 constexpr size_t CACHE_SIZE = 16 * (1024 * 1024);
 
+static const std::string GLOBAL_PREFIX = "global.";
+
 std::mutex SceneLoader::m_textureMutex;
 
 bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
@@ -87,10 +89,13 @@ void SceneLoader::applyUpdates(Scene& scene, const std::vector<SceneUpdate>& upd
             Node value = YAML::Load(update.value);
 
             auto node = YamlPath(update.path).get(root);
-            node = value;
-
+            if (node && value) {
+              node = value;
+            }
         } catch (YAML::ParserException e) {
             LOGE("Parsing scene update string failed. '%s'", e.what());
+        } catch (std::exception e) {
+            LOGE("Parsing scene update string failed.!!!! %s", e.what());
         }
     }
 }
@@ -104,25 +109,65 @@ void printFilters(const SceneLayer& layer, int indent){
     }
 };
 
-void createGlobalRefsRecursive(const Node& node, Scene& scene, YamlPath path) {
+struct PathElement {
+    size_t index;
+    const std::string* key;
+    explicit PathElement(size_t index) : index(index), key(nullptr) {}
+    explicit PathElement(const std::string* key) : index(0), key(key) {}
+};
+
+std::string PathToString(const std::vector<PathElement>& path) {
+    size_t s = 0;
+    for(auto& e : path) {
+        if (e.key) {
+            s += e.key->length()+1;
+        } else {
+            int c = 1;
+            while (e.index >= pow(10, c)) { c += 1; }
+            s += c + 1;
+        }
+    }
+    std::string p;
+    p.reserve(s);
+
+    for(auto& e : path) {
+        if (e.key) {
+            if (!p.empty()) { p += '.'; }
+            p += *e.key;
+        } else {
+            p += '#';
+            p += std::to_string(e.index);
+        }
+    }
+
+    return p;
+
+}
+
+void createGlobalRefsRecursive(const Node& node, Scene& scene, std::vector<PathElement>& path) {
     switch(node.Type()) {
     case NodeType::Scalar: {
             const auto& value = node.Scalar();
-            if (value.compare(0, 7, "global.") == 0) {
-                scene.globalRefs().emplace_back(path, YamlPath(value));
+            if (value.length() > 7 && value.compare(0, 7, GLOBAL_PREFIX) == 0) {
+                scene.globalRefs().emplace_back(YamlPath(PathToString(path)),
+                                                YamlPath(value.substr(7)));
             }
         }
         break;
     case NodeType::Sequence: {
-            int i = 0;
+            path.emplace_back(0);
             for (const auto& entry : node) {
-                createGlobalRefsRecursive(entry, scene, path.add(i++));
+                createGlobalRefsRecursive(entry, scene, path);
+                path.back().index++;
             }
+            path.pop_back();
         }
         break;
     case NodeType::Map:
         for (const auto& entry : node) {
-            createGlobalRefsRecursive(entry.second, scene, path.add(entry.first.Scalar()));
+            path.emplace_back(&entry.first.Scalar());
+            createGlobalRefsRecursive(entry.second, scene, path);
+            path.pop_back();
         }
         break;
     default:
@@ -131,13 +176,24 @@ void createGlobalRefsRecursive(const Node& node, Scene& scene, YamlPath path) {
 }
 
 void SceneLoader::applyGlobals(Node root, Scene& scene) {
+    std::vector<PathElement> path;
 
-    createGlobalRefsRecursive(root, scene, YamlPath());
+    createGlobalRefsRecursive(root, scene, path);
+    const auto& globals = root["global"];
+    if (!scene.globalRefs().empty() && !globals.IsMap()) {
+        LOGW("Missing global references");
+    }
 
     for (auto& globalRef : scene.globalRefs()) {
         auto target = globalRef.first.get(root);
-        auto global = globalRef.second.get(root);
-        target = global;
+        auto global = globalRef.second.get(globals);
+        if (target && global) {
+            target = global;
+        } else {
+            LOGW("Global reference is undefined: %s <= %s",
+                 globalRef.first.codedPath.c_str(),
+                 globalRef.second.codedPath.c_str());
+        }
     }
 }
 

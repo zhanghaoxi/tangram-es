@@ -23,27 +23,43 @@ YamlPath YamlPath::add(const std::string& key) {
 }
 
 YAML::Node YamlPath::get(YAML::Node node) {
-    size_t beginToken = 0, endToken = 0, pathSize = codedPath.size();
-    auto delimiter = MAP_DELIM; // First token must be a map key.
+    size_t pathSize = codedPath.size();
+    size_t endToken = 0;
+
+    char delimiter = MAP_DELIM; // First token must be a map key.
+    std::string key;
+
     while (endToken < pathSize) {
-        beginToken = endToken;
-        endToken = pathSize;
-        endToken = std::min(endToken, codedPath.find(SEQ_DELIM, beginToken));
-        endToken = std::min(endToken, codedPath.find(MAP_DELIM, beginToken));
-        if (delimiter == SEQ_DELIM) {
+        size_t beginToken = endToken;
+
+        while (endToken < pathSize) {
+            if (codedPath[endToken] == MAP_DELIM ||
+                codedPath[endToken] == SEQ_DELIM) { break; }
+            ++endToken;
+        }
+
+        // Don't create nodes if key or index do not exist
+        const Node& cur = node;
+        if (delimiter == MAP_DELIM) {
+            key = codedPath.substr(beginToken, endToken - beginToken);
+            if (const Node& value = cur[key]) {
+                node.reset(value);
+            } else {
+                // A node in the path was missing, return undefined node.
+                return value;
+            }
+        } else if (delimiter == SEQ_DELIM) {
             int index = std::stoi(&codedPath[beginToken]);
-            node.reset(node[index]);
-        } else if (delimiter == MAP_DELIM) {
-            auto key = codedPath.substr(beginToken, endToken - beginToken);
-            node.reset(node[key]);
-        } else {
-            return Node(); // Path is malformed, return null node.
+            if (const Node& value = cur[index]) {
+                node.reset(value);
+            } else {
+                return value;
+            }
         }
+
         delimiter = codedPath[endToken]; // Get next character as the delimiter.
+
         ++endToken; // Move past the delimiter.
-        if (endToken < pathSize && !node) {
-            return Node(); // A node in the path was missing, return null node.
-        }
     }
     return node;
 }
