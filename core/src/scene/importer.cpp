@@ -145,7 +145,7 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
     Node textures = root["textures"];
 
     if (textures) {
-        for (auto texture : textures) {
+        for (const auto& texture : textures) {
             if (Node textureUrlNode = texture.second["url"]) {
                 if (nodeIsPotentialUrl(textureUrlNode)) {
                     textureUrlNode = Url(textureUrlNode.Scalar()).resolved(base).string();
@@ -158,9 +158,9 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
 
     if (Node styles = root["styles"]) {
 
-        for (auto entry : styles) {
+        for (const auto& entry : styles) {
 
-            Node style = entry.second;
+            const Node& style = entry.second;
             if (!style.IsMap()) { continue; }
 
             //style->texture
@@ -171,10 +171,10 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
             }
 
             //style->material->texture
-            if (Node material = style["material"]) {
+            if (const Node& material = style["material"]) {
                 if (!material.IsMap()) { continue; }
                 for (auto& prop : {"emission", "ambient", "diffuse", "specular", "normal"}) {
-                    if (Node propNode = material[prop]) {
+                    if (const Node& propNode = material[prop]) {
                         if (!propNode.IsMap()) { continue; }
                         if (Node matTexture = propNode["texture"]) {
                             if (nodeIsTextureUrl(matTexture, textures)) {
@@ -186,10 +186,10 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
             }
 
             //style->shader->uniforms->texture
-            if (Node shaders = style["shaders"]) {
+            if (const Node& shaders = style["shaders"]) {
                 if (!shaders.IsMap()) { continue; }
-                if (Node uniforms = shaders["uniforms"]) {
-                    for (auto uniformEntry : uniforms) {
+                if (const Node& uniforms = shaders["uniforms"]) {
+                    for (const auto& uniformEntry : uniforms) {
                         Node uniformValue = uniformEntry.second;
                         if (nodeIsTextureUrl(uniformValue, textures)) {
                             uniformValue = Url(uniformValue.Scalar()).resolved(base).string();
@@ -208,8 +208,8 @@ void Importer::resolveSceneUrls(Node& root, const Url& base) {
 
     // Resolve data source URLs.
 
-    if (Node sources = root["sources"]) {
-        for (auto source : sources) {
+    if (const Node& sources = root["sources"]) {
+        for (const auto& source : sources) {
             if (!source.second.IsMap()) { continue; }
             if (Node sourceUrl = source.second["url"]) {
                 if (nodeIsPotentialUrl(sourceUrl)) {

@@ -49,16 +49,16 @@ struct SceneLoader {
 
     static void loadBackground(const Node& background, const std::shared_ptr<Scene>& scene);
     static void loadSource(const std::string& name, const Node& source, const Node& sources, const std::shared_ptr<Scene>& scene);
-    static void loadSourceRasters(std::shared_ptr<DataSource>& source, Node rasterNode, const Node& sources,
+    static void loadSourceRasters(std::shared_ptr<DataSource>& source, const Node& rasterNode, const Node& sources,
                                   const std::shared_ptr<Scene>& scene);
     static void loadTexture(const std::pair<Node, Node>& texture, const std::shared_ptr<Scene>& scene);
     static void loadLayer(const std::pair<Node, Node>& layer, const std::shared_ptr<Scene>& scene);
     static void loadLight(const std::pair<Node, Node>& light, const std::shared_ptr<Scene>& scene);
     static void loadCameras(const Node& cameras, const std::shared_ptr<Scene>& scene);
     static void loadCamera(const Node& camera, const std::shared_ptr<Scene>& scene);
-    static void loadStyleProps(Style& style, Node styleNode, const std::shared_ptr<Scene>& scene);
-    static void loadMaterial(Node matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style);
-    static void loadShaderConfig(Node shaders, Style& style, const std::shared_ptr<Scene>& scene);
+    static void loadStyleProps(Style& style, const Node& styleNode, const std::shared_ptr<Scene>& scene);
+    static void loadMaterial(const Node& matNode, Material& material, const std::shared_ptr<Scene>& scene, Style& style);
+    static void loadShaderConfig(const Node& shaders, Style& style, const std::shared_ptr<Scene>& scene);
     static void loadFont(const std::pair<Node, Node>& font, const std::shared_ptr<Scene>& scene);
     static SceneLayer loadSublayer(const Node& layer, const std::string& name, const std::shared_ptr<Scene>& scene);
     static Filter generateFilter(const Node& filter, Scene& scene);
@@ -80,17 +80,17 @@ struct SceneLoader {
     static void updateSpriteNodes(const std::string& texName,
             std::shared_ptr<Texture>& texture, const std::shared_ptr<Scene>& scene);
 
-    static MaterialTexture loadMaterialTexture(Node matCompNode, const std::shared_ptr<Scene>& scene, Style& style);
+    static MaterialTexture loadMaterialTexture(const Node& matCompNode, const std::shared_ptr<Scene>& scene, Style& style);
 
-    static void parseStyleParams(const Node& params, const std::shared_ptr<Scene>& scene, const std::string& propPrefix,
+    static void parseStyleParams(const Node& params, Scene& scene, const std::string& propPrefix,
                                  std::vector<StyleParam>& out);
-    static void parseTransition(const Node& params, const std::shared_ptr<Scene>& scene, std::string _prefix, std::vector<StyleParam>& out);
+    static void parseTransition(const Node& params, std::string _prefix, std::vector<StyleParam>& out);
 
     static bool parseStyleUniforms(const Node& value, const std::shared_ptr<Scene>& scene, StyleUniform& styleUniform);
 
     static void parseLightPosition(const Node& position, PointLight& light);
 
-    static bool loadStyle(const std::string& styleName, Node config, const std::shared_ptr<Scene>& scene);
+    static bool loadStyle(const std::string& styleName, const Node& config, const std::shared_ptr<Scene>& scene);
 
     static std::mutex m_textureMutex;
     SceneLoader() = delete;

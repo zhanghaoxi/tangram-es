@@ -291,7 +291,7 @@ void MarkerManager::buildStyling(Marker& marker) {
     // Update the draw rule for the marker.
     YAML::Node node = YAML::Load(marker.stylingString());
     std::vector<StyleParam> params;
-    SceneLoader::parseStyleParams(node, m_scene, "", params);
+    SceneLoader::parseStyleParams(node, *m_scene, "", params);
 
     // Compile any new JS functions used for styling.
     const auto& sceneJsFnList = m_scene->functions();
