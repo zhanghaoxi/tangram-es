@@ -15,8 +15,6 @@ std::atomic_uint Importer::progressCounter(0);
 
 Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) {
 
-    clock_t begin = clock();
-
     Url path;
     Url rootScenePath = scenePath.resolved(resourceRoot);
 
@@ -64,13 +62,15 @@ Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) 
             });
         } else {
             std::unique_lock<std::mutex> lock(sceneMutex);
-            processScene(path, getSceneString(path));
+            clock_t begin = clock();
+            const auto& buf = getSceneString(path);
+            float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+            LOG("---------- read yamls %f", loadTime);
+            processScene(path, buf);
         }
     }
 
-    float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
-    LOG("---------- load yamls %f", loadTime);
-    begin = clock();
+    clock_t begin = clock();
 
     Node root = Node();
 
@@ -78,7 +78,7 @@ Node Importer::applySceneImports(const Url& scenePath, const Url& resourceRoot) 
     std::vector<Url> sceneStack;
     importScenesRecursive(root, rootScenePath, sceneStack);
 
-    loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
     LOG("---------- apply imports %f", loadTime);
 
     return root;
@@ -94,7 +94,12 @@ void Importer::processScene(const Url& scenePath, const std::string &sceneString
     }
 
     try {
+        clock_t begin = clock();
+
         auto sceneNode = YAML::Load(sceneString);
+
+        float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+        LOG("---------- load yamls %f", loadTime);
 
         m_scenes[scenePath] = sceneNode;
 
