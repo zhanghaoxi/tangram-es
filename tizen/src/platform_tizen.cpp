@@ -25,7 +25,31 @@
 static bool s_isContinuousRendering = false;
 static std::function<void()> s_renderCallbackFunction = nullptr;
 
-static std::vector<std::string> s_fallbackFonts;
+static std::vector<std::string> s_fallbackFonts {
+        "/usr/share/fonts/BreezeSans-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansEthiopic-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansArabic-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansBangla-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansDevanagari-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansGujarati-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansHebrew-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansArmenian-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansJapanese-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansGeorgian-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansKhmer-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansKannada-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansKorean-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansLao-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansMalayalam-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansMyanmar-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansOdia-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansGurmukhi-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansSinhala-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansTamil-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansTelugu-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansThai-Regular.ttf",
+        "/usr/share/fallback_fonts/BreezeSansChinese-Regular.ttf"};
+
 static FcConfig* s_fcConfig = nullptr;
 
 static UrlWorker s_workers;
@@ -96,6 +120,8 @@ bool isContinuousRendering() {
 }
 
 void initPlatformFontSetup() {
+
+    return;
 
     static bool s_platformFontsInit = false;
     if (s_platformFontsInit) { return; }
