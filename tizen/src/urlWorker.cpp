@@ -5,9 +5,9 @@
 #include <sstream>
 
 static size_t write_data(void *_buffer, size_t _size, size_t _nmemb, void *_dataPtr) {
-        size_t realSize = _size * _nmemb;
-        auto* stream = (std::stringstream*)_dataPtr;
-    stream->write(reinterpret_cast<const char*>(_buffer), realSize);
+    const size_t realSize = _size * _nmemb;
+    std::stringstream* stream = (std::stringstream*)_dataPtr;
+    stream->write((const char*)_buffer, realSize);
     return realSize;
 }
 
@@ -18,8 +18,12 @@ void UrlWorker::start(int _numWorker, const char* _proxyAddress) {
 
     curl_global_init(CURL_GLOBAL_ALL);
 
+    m_workers.reserve(_numWorker);
+
     for (int i = 0; i < _numWorker; i++) {
-        m_workers.emplace_back(new std::thread(&UrlWorker::run, this));
+        m_workers.emplace_back();
+        m_workers.back().thread.reset(new std::thread(&UrlWorker::run, this,
+                                                      &m_workers.back()));
     }
 }
 
@@ -29,7 +33,7 @@ UrlWorker::~UrlWorker() {
     }
 }
 
-void UrlWorker::run() {
+void UrlWorker::run(Thread* thread) {
     std::stringstream stream;
     CURL* curlHandle;
 
@@ -52,7 +56,6 @@ void UrlWorker::run() {
         std::unique_ptr<UrlTask> task;
         {
             std::unique_lock<std::mutex> lock(m_mutex);
-
             m_condition.wait(lock, [&]{ return !m_running || !m_queue.empty(); });
 
             // Check if thread should stop
@@ -60,6 +63,11 @@ void UrlWorker::run() {
 
             task = std::move(m_queue.front());
             m_queue.erase(m_queue.begin());
+
+            if (task) {
+                thread->activeUrl = task->url;
+                thread->canceled = false;
+            }
         }
 
         if (!task) { continue; }
@@ -70,6 +78,11 @@ void UrlWorker::run() {
         // Reset stream
         stream.seekp(0);
         CURLcode result = curl_easy_perform(curlHandle);
+
+        if (thread->canceled) {
+            LOG("WORKER DROPPED %s", task->url.c_str());
+            continue;
+        }
 
         long httpStatusCode = 0;
         curl_easy_getinfo(curlHandle, CURLINFO_RESPONSE_CODE, &httpStatusCode);
@@ -105,6 +118,25 @@ void UrlWorker::enqueue(std::unique_ptr<UrlTask> _task) {
     m_condition.notify_one();
 }
 
+void UrlWorker::cancel(const std::string& _url) {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (!m_running) {
+        return;
+    }
+
+    for (auto& task : m_queue) {
+        if (task && task->url == _url) {
+            LOG("CANCELED %s", _url.c_str());
+            task.reset();
+        }
+    }
+    for (auto& worker : m_workers) {
+        if (worker.activeUrl == _url) {
+            worker.canceled = true;
+        }
+    }
+}
+
 void UrlWorker::stop() {
         bool isRunning;
     {
@@ -118,7 +150,7 @@ void UrlWorker::stop() {
     m_condition.notify_all();
 
     for (auto& worker : m_workers) {
-        worker->join();
+        worker.thread->join();
     }
 
     m_workers.clear();
