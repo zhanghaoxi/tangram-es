@@ -72,7 +72,11 @@ void UrlWorker::run(Thread* thread) {
 
         if (!task) { continue; }
 
-        LOGD("Fetching URL: %s", task->url.c_str());
+        LOG("Starting %s", task->url.c_str());
+
+        //LOG("Fetching URL: %s", task->url.c_str());
+        const clock_t begin = clock();
+
         curl_easy_setopt(curlHandle, CURLOPT_URL, task->url.c_str());
 
         // Reset stream
@@ -91,6 +95,10 @@ void UrlWorker::run(Thread* thread) {
 
         if (result == CURLE_OK && httpStatusCode == 200) {
             size_t nBytes = stream.tellp();
+
+            float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+            LOG("Fetched %s / %f / %lu byte", task->url.c_str(), loadTime, nBytes);
+
             stream.seekp(0);
 
             content.resize(nBytes);
