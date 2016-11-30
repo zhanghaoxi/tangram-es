@@ -17,13 +17,6 @@ namespace Tangram {
 
 TileBuilder::TileBuilder(std::shared_ptr<Scene> _scene)
     : m_scene(_scene) {
-
-    m_styleContext.initFunctions(*_scene);
-
-    // Initialize StyleBuilders
-    for (auto& style : _scene->styles()) {
-        m_styleBuilder[style->getName()] = style->createBuilder();
-    }
 }
 
 TileBuilder::~TileBuilder() {}
@@ -93,6 +86,18 @@ void TileBuilder::applyStyling(const Feature& _feature, const SceneLayer& _layer
 }
 
 std::shared_ptr<Tile> TileBuilder::build(TileID _tileID, const TileData& _tileData, const DataSource& _source) {
+
+    if (m_styleBuilder.size() == 0) {
+        if (m_scene->styles().empty()) {
+            return {};
+        }
+        // Initialize StyleContext
+        m_styleContext.initFunctions(*m_scene);
+        // Initialize StyleBuilders
+        for (auto& style : m_scene->styles()) {
+            m_styleBuilder[style->getName()] = style->createBuilder();
+        }
+    }
 
     m_selectionFeatures.clear();
 
