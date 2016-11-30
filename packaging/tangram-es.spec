@@ -64,8 +64,8 @@ MAJORVER=`echo %{version} | awk 'BEGIN {FS="."}{print $1}'`
 #echo "-------------------------------->>"
 #find .
 #echo "--------------------------------<<"
-cmake .  -DCMAKE_BUILD_TYPE=Debug -DARCH=%{ARCH} -DPLATFORM_TARGET=tizen-lib -DCMAKE_INSTALL_PREFIX=%{_prefix} -DMAJORVER=${MAJORVER} -DFULLVER=%{version}
-make %{?jobs:-j%jobs}
+cmake .  -DCMAKE_BUILD_TYPE=Release -DARCH=%{ARCH} -DPLATFORM_TARGET=tizen-lib -DCMAKE_INSTALL_PREFIX=%{_prefix} -DMAJORVER=${MAJORVER} -DFULLVER=%{version}
+VERBOSE=1 make %{?jobs:-j%jobs}
 
 %install
 rm -rf %{buildroot}
