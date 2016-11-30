@@ -167,7 +167,7 @@ const std::vector<Filter>& Filter::operands() const {
     return empty;
 }
 
-const bool Filter::isOperator() const {
+bool Filter::isOperator() const {
 
     switch (data.which()) {
     case Data::type<OperatorAny>::value:
