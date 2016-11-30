@@ -20,6 +20,9 @@
 #include <dlog.h>
 #include <fontconfig/fontconfig.h>
 
+#include "debug/sighandler.h"
+#include <signal.h>
+
 #define NUM_WORKERS 4
 
 static bool s_isContinuousRendering = false;
@@ -54,6 +57,22 @@ static FcConfig* s_fcConfig = nullptr;
 
 static UrlWorker s_workers;
 
+void sighandler(int sig) {
+    FILE* f = fopen("/tmp/tangram.crash", "a");
+    if (f) {
+
+        fputs ("---------\n", f);
+        fprintf(f, " SIGNAL %d \n", sig);
+
+    print_stacktrace(f);
+    fputs ("---------\n", f);
+    fclose (f);
+  }
+  if (SIGSEGV == 11 || sig == SIGFPE) {
+    abort();
+  }
+}
+
 bool startUrlRequest(const std::string& _url, UrlCallback _callback) {
     s_workers.enqueue(std::make_unique<UrlTask>(_url, _callback));
     return true;
@@ -64,10 +83,25 @@ void cancelUrlRequest(const std::string& _url) {
 }
 
 void initUrlRequests(const char* proxyAddress) {
+    FILE* f = fopen("/tmp/tangram.crash", "a");
+    if (f) {
+        fputs ("----- started --- \n", f);
+        fclose (f);
+    }
+    signal(SIGSEGV, sighandler);
+    signal(SIGUSR1, sighandler);
+    signal(SIGFPE, sighandler);
+
     s_workers.start(4, proxyAddress);
 }
 
 void stopUrlRequests() {
+    FILE* f = fopen("/tmp/tangram.crash", "a");
+    if (f) {
+        fputs ("----- stopped --- \n", f);
+        fclose (f);
+    }
+
     s_workers.stop();
 }
 
