@@ -94,7 +94,8 @@ public:
     std::vector<FeatureSelectionQuery> featureSelectionQueries;
     std::vector<LabelSelectionQuery> labelSelectionQueries;
 
-    bool initialFrame = true;
+    int initialFrame = 1;
+    clock_t initTime = clock();
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -127,6 +128,10 @@ Map::~Map() {
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
+
+    float loadTime = (float(clock() - initTime) / CLOCKS_PER_SEC) * 1000;
+    LOG("-------- setScene  %fms since creation", loadTime);
+
     {
         std::lock_guard<std::mutex> lock(sceneMutex);
         scene = _scene;
@@ -184,7 +189,7 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
         setContinuousRendering(animated);
     }
 
-    initialFrame = true;
+    initialFrame = 1;
 }
 
 // NB: Not thread-safe. Must be called on the main/render thread!
@@ -219,8 +224,13 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
     }
 
     runAsyncTask([nextScene, _platformCallback, _cbData, this](){
+            float loadTime = (float(clock() - impl->initTime) / CLOCKS_PER_SEC) * 1000;
+            LOG("-------- start scene  %f since creation", loadTime);
 
             bool ok = SceneLoader::loadScene(nextScene);
+
+            loadTime = (float(clock() - impl->initTime) / CLOCKS_PER_SEC) * 1000;
+            LOG("-------- got scene  %f since creation", loadTime);
 
             impl->jobQueue.add([nextScene, ok, _platformCallback, _cbData, this]() {
                     {
@@ -317,6 +327,7 @@ bool Map::update(float _dt) {
 
     // Wait until font resources are fully loaded
     if (impl->scene->pendingFonts > 0) {
+        LOG("pending fonts...");
         requestRender();
         return false;
     }
@@ -324,6 +335,12 @@ bool Map::update(float _dt) {
     FrameInfo::beginUpdate();
 
     impl->jobQueue.runJobs();
+
+    if (impl->scene->styles().empty() || impl->initialFrame == 1) {
+        float loadTime = (float(clock() - impl->initTime) / CLOCKS_PER_SEC) * 1000;
+        LOG("update: waiting for styles / %fms since creation", loadTime);
+        return false;
+    }
 
     impl->scene->updateTime(_dt);
 
@@ -406,15 +423,26 @@ void Map::pickLabelAt(float _x, float _y, LabelPickCallback _onTouchLabelSelectC
 
 void Map::render() {
 
-    // Do not render if any texture resources are in process of being downloaded
-    if (impl->scene->pendingTextures > 0) {
-        return;
-    }
-
+    // Cache default framebuffer handle used for rendering
+    impl->renderState.cacheDefaultFramebuffer();
 
     if (impl->initialFrame) {
+        float loadTime = (float(clock() - impl->initTime) / CLOCKS_PER_SEC) * 1000;
+        LOG("-------- render initialFrame %d / %fms since creation", impl->initialFrame, loadTime);
+
+        glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
+        FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
+                           viewport, impl->scene->background().asIVec4());
+
+        if (impl->initialFrame == 1) {
+            // first blit background - then wait for shaders on next frame
+            impl->initialFrame = 2;
+            requestRender();
+            return;
+        }
+        impl->initialFrame = 0;
+
         clock_t begin = clock();
-        impl->initialFrame = false;
         for (const auto& style : impl->scene->styles()) {
             clock_t begin = clock();
             //style->getShaderProgram()->use(impl->renderState);
@@ -423,15 +451,24 @@ void Map::render() {
             float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
             LOG("--------shader: %f - %s", loadTime, style->getName().c_str());
         }
-        float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+        loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
         LOG("--------shaders %f", loadTime);
+
+        requestRender();
     }
 
+    if (impl->scene->styles().empty()) {
+        LOG("render: waiting for styles");
+        return;
+    }
+
+    // Do not render if any texture resources are in process of being downloaded
+    if (impl->scene->pendingTextures > 0) {
+        LOG("pending textures...");
+        return;
+    }
 
     bool drawSelectionBuffer = getDebugFlag(DebugFlags::selection_buffer);
-
-    // Cache default framebuffer handle used for rendering
-    impl->renderState.cacheDefaultFramebuffer();
 
     FrameInfo::beginFrame();
 
@@ -517,6 +554,7 @@ void Map::render() {
     glm::vec2 viewport(impl->view.getWidth(), impl->view.getHeight());
     FrameBuffer::apply(impl->renderState, impl->renderState.defaultFrameBuffer(),
                        viewport, impl->scene->background().asIVec4());
+
 
     if (drawSelectionBuffer) {
         impl->selectionBuffer->drawDebug(impl->renderState, viewport);
