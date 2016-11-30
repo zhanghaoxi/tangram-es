@@ -194,7 +194,9 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
 
 // NB: Not thread-safe. Must be called on the main/render thread!
 // (Or externally synchronized with main/render thread)
-void Map::loadScene(const char* _scenePath, bool _useScenePosition) {
+void Map::loadScene(const char* _scenePath, bool _useScenePosition,
+                    const std::vector<SceneUpdate>& _sceneUpdates) {
+
     LOG("Loading scene file: %s", _scenePath);
 
     {
@@ -206,12 +208,15 @@ void Map::loadScene(const char* _scenePath, bool _useScenePosition) {
     auto scene = std::make_shared<Scene>(_scenePath);
     scene->useScenePosition = _useScenePosition;
 
-    if (SceneLoader::loadScene(scene)) {
+    if (SceneLoader::loadScene(scene, _sceneUpdates)) {
         impl->setScene(scene);
     }
 }
 
-void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapReady _platformCallback, void *_cbData) {
+void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition,
+                         MapReady _platformCallback, void *_cbData,
+                         const std::vector<SceneUpdate>& _sceneUpdates) {
+
     LOG("Loading scene file (async): %s", _scenePath);
 
     std::shared_ptr<Scene> nextScene;
@@ -223,11 +228,11 @@ void Map::loadSceneAsync(const char* _scenePath, bool _useScenePosition, MapRead
         nextScene = impl->nextScene;
     }
 
-    runAsyncTask([nextScene, _platformCallback, _cbData, this](){
+    runAsyncTask([nextScene, _platformCallback, _cbData, _sceneUpdates, this](){
             float loadTime = (float(clock() - impl->initTime) / CLOCKS_PER_SEC) * 1000;
             LOG("-------- start scene  %f since creation", loadTime);
 
-            bool ok = SceneLoader::loadScene(nextScene);
+            bool ok = SceneLoader::loadScene(nextScene, _sceneUpdates);
 
             loadTime = (float(clock() - impl->initTime) / CLOCKS_PER_SEC) * 1000;
             LOG("-------- got scene  %f since creation", loadTime);

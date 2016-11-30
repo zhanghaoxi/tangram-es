@@ -52,7 +52,7 @@ static const std::string GLOBAL_PREFIX = "global.";
 
 std::mutex SceneLoader::m_textureMutex;
 
-bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
+bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene, const std::vector<SceneUpdate>& _updates) {
 
     Importer sceneImporter;
 
@@ -64,6 +64,13 @@ bool SceneLoader::loadScene(std::shared_ptr<Scene> _scene) {
     LOG("--------load %f", loadTime);
 
     if (_scene->config()) {
+        begin = clock();
+
+        applyUpdates(*_scene, _updates);
+
+        float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+        LOG("--------apply updates %f", loadTime);
+
         begin = clock();
         // Load font resources
         _scene->fontContext()->loadFonts();
