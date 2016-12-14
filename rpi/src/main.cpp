@@ -106,7 +106,7 @@ void setup(int argc, char **argv) {
     }
 
     map = new Tangram::Map();
-    map->loadSceneAsync(scene.c_str());
+    map->loadSceneAsync(resolvePath(sceneFile.c_str()).c_str(), true);
     map->setupGL();
     map->resize(width, height);
     if (lon != 0.0f && lat != 0.0f) {

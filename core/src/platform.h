@@ -27,6 +27,13 @@ void setContinuousRendering(bool _isContinuous);
 
 bool isContinuousRendering();
 
+/* Resolve a file path into an absolute file URL
+ *
+ * Given an absolute or relative file path, returns an equivalent absolute
+ * file URL for that path. Relative paths are interpreted relative to the
+ * platform's root resource directory.
+ */
+std::string resolvePath(const char* _path);
 
 /* Read a file as a string
  *

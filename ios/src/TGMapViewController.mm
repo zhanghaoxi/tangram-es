@@ -77,7 +77,7 @@ __CG_STATIC_ASSERT(sizeof(TGGeoPoint) == sizeof(Tangram::LngLat));
 {
     if (!self.map) { return; }
 
-    self.scenePath = path;
+    self.scenePath = [NSString stringWithUTF8String:resolvePath([path UTF8String]).c_str()];
 
     MapReady onReadyCallback = [self, path](void* _userPtr) -> void {
         if (self.mapViewDelegate && [self.mapViewDelegate respondsToSelector:@selector(mapView:didLoadSceneAsync:)]) {

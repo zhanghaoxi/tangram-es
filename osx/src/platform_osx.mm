@@ -13,6 +13,7 @@
 
 #include "platform_osx.h"
 #include "gl/hardware.h"
+#include "util/url.h"
 #include "log.h"
 
 #define DEFAULT "fonts/NotoSans-Regular.ttf"
@@ -55,47 +56,42 @@ bool isContinuousRendering() {
 
 }
 
-NSString* resolvePath(const char* _path) {
+std::string resolvePath(const char* path) {
 
-    NSString* pathString = [NSString stringWithUTF8String:_path];
+    const char* base = [[[[NSBundle mainBundle] resourceURL] absoluteString] UTF8String];
 
-    NSURL* resourceFolderUrl = [[NSBundle mainBundle] resourceURL];
-
-    NSURL* resolvedUrl = [NSURL URLWithString:pathString
-                                relativeToURL:resourceFolderUrl];
-
-    return [resolvedUrl path];
+    return Tangram::Url(path).resolved(base).string();
 }
 
-std::string stringFromFile(const char* _path) {
+std::string stringFromFile(const char* path) {
 
-    NSString* path = resolvePath(_path);
-    NSString* str = [NSString stringWithContentsOfFile:path
+    NSURL* url = [NSURL URLWithString: [NSString stringWithUTF8String:path]];
+    NSString* str = [NSString stringWithContentsOfFile:[url path]
                                           usedEncoding:NULL
                                                  error:NULL];
 
     if (str == nil) {
-        LOGW("Failed to read file at path: %s", [path UTF8String]);
+        LOGW("Failed to read file at path: %s", path);
         return std::string();
     }
 
     return std::string([str UTF8String]);
 }
 
-unsigned char* bytesFromFile(const char* _path, size_t& _size) {
+unsigned char* bytesFromFile(const char* path, size_t& size) {
 
-    NSString* path = resolvePath(_path);
-    NSMutableData* data = [NSMutableData dataWithContentsOfFile:path];
+    NSURL* url = [NSURL URLWithString: [NSString stringWithUTF8String:path]];
+    NSMutableData* data = [NSMutableData dataWithContentsOfFile:[url path]];
 
     if (data == nil) {
-        LOGW("Failed to read file at path: %s", [path UTF8String]);
-        _size = 0;
+        LOGW("Failed to read file at path: %s", path);
+        size = 0;
         return nullptr;
     }
 
-    _size = data.length;
-    unsigned char* ptr = (unsigned char*)malloc(_size);
-    [data getBytes:ptr length:_size];
+    size = data.length;
+    unsigned char* ptr = (unsigned char*)malloc(size);
+    [data getBytes:ptr length:size];
 
     return ptr;
 }

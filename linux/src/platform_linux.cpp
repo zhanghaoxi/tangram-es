@@ -9,6 +9,7 @@
 #include "urlWorker.h"
 #include "platform_linux.h"
 #include "gl/hardware.h"
+#include "util/url.h"
 
 #include <libgen.h>
 #include <unistd.h>
@@ -71,6 +72,14 @@ bool isContinuousRendering() {
 
     return s_isContinuousRendering;
 
+}
+
+std::string resolvePath(const char* path) {
+    const char* currentDirectory = get_current_dir_name(); // https://linux.die.net/man/3/getcwd
+    std::string base = "file://" + currentDirectory;
+    auto resolved = Tangram::Url(path).resolved(base);
+    free(currentDirectory);
+    return resolved.string();
 }
 
 std::string stringFromFile(const char* _path) {

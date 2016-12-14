@@ -222,6 +222,14 @@ unsigned char* systemFont(const std::string& _name, const std::string& _weight, 
     return bytesFromFile(path.c_str(), *_size);
 }
 
+std::string resolvePath(const char* path) {
+    const char* currentDirectory = get_current_dir_name(); // https://linux.die.net/man/3/getcwd
+    std::string base = "file://" + currentDirectory;
+    auto resolved = Tangram::Url(path).resolved(base);
+    free(currentDirectory);
+    return resolved.string();
+}
+
 unsigned char* bytesFromFile(const char* _path, size_t& _size) {
 
     if (!_path || strlen(_path) == 0) { return nullptr; }
