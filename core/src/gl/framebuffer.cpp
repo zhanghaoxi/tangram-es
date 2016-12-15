@@ -72,6 +72,41 @@ GLuint FrameBuffer::readAt(float _normalizedX, float _normalizedY) const {
     return pixel;
 }
 
+GLuint FrameBuffer::readAtPointWithRadius(float _normalizedX, float _normalizedY, float _normalizedR) const {
+
+    int32_t left = (_normalizedX - _normalizedR) * m_width;
+    int32_t bottom =  (_normalizedY - _normalizedR) * m_height;
+    int32_t width = 2 * _normalizedR * m_width;
+    int32_t height = 2 * _normalizedR * m_height;
+
+    std::vector<GLuint> pixels(width * height);
+
+    GL::readPixels(left, bottom, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+
+    std::sort(pixels.begin(), pixels.end());
+
+    uint32_t modeColor = 0;
+    uint32_t modeCount = 0;
+    uint32_t currentColor = 0;
+    uint32_t currentCount = 0;
+
+    for (auto color : pixels) {
+        if (color != 0 && color == currentColor) {
+            currentCount++;
+        }
+        if (currentCount >= modeCount) {
+            modeCount = currentCount;
+            modeColor = currentColor;
+        }
+        if (color != currentColor) {
+            currentColor = color;
+            currentCount = 1;
+        }
+    }
+
+    return modeColor;
+}
+
 void FrameBuffer::init(RenderState& _rs) {
 
     if (!Hardware::supportsGLRGBA8OES && m_colorRenderBuffer) {

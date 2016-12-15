@@ -33,6 +33,8 @@ public:
 
     GLuint readAt(float _normalizedX, float _normalizedY) const;
 
+    GLuint readAtPointWithRadius(float _normalizedX, float _normalizedY, float _normalizedR) const;
+
     void drawDebug(RenderState& _rs, glm::vec2 _dim);
 
 private:

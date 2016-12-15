@@ -435,6 +435,8 @@ void Map::render() {
     // Render feature selection pass to offscreen framebuffer
     if (impl->featureSelectionQueries.size() > 0 || impl->labelSelectionQueries.size() > 0 || drawSelectionBuffer) {
 
+        const float selectionRadius = 10.f;
+
         impl->selectionBuffer->applyAsRenderTarget(impl->renderState);
 
         std::lock_guard<std::mutex> lock(impl->tilesMutex);
@@ -452,9 +454,9 @@ void Map::render() {
 
             float x = selectionQuery.position.x / impl->view.getWidth();
             float y = (1.f - (selectionQuery.position.y / impl->view.getHeight()));
+            float r = selectionRadius / impl->view.getHeight();
 
-            // TODO: read with a scalable thumb size
-            GLuint color = impl->selectionBuffer->readAt(x, y);
+            GLuint color = impl->selectionBuffer->readAtPointWithRadius(x, y, r);
 
             auto position = std::array<float, 2>{{selectionQuery.position.x,
                                                   selectionQuery.position.y}};
@@ -483,9 +485,9 @@ void Map::render() {
 
             float x = labelQuery.position.x / impl->view.getWidth();
             float y = (1.f - (labelQuery.position.y / impl->view.getHeight()));
+            float r = selectionRadius / impl->view.getHeight();
 
-            // TODO: read with a scalable thumb size and iterate over the read colors
-            GLuint color = impl->selectionBuffer->readAt(x, y);
+            GLuint color = impl->selectionBuffer->readAtPointWithRadius(x, y, r);
 
             // Retrieve the label for this selection color
             if (color == 0) {
