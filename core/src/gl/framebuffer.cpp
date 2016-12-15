@@ -83,28 +83,21 @@ GLuint FrameBuffer::readAtPointWithRadius(float _normalizedX, float _normalizedY
 
     GL::readPixels(left, bottom, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
 
-    std::sort(pixels.begin(), pixels.end());
+    uint32_t nearestColor = 0;
+    uint32_t nearestDistance = width + height;
 
-    uint32_t modeColor = 0;
-    uint32_t modeCount = 0;
-    uint32_t currentColor = 0;
-    uint32_t currentCount = 0;
-
-    for (auto color : pixels) {
-        if (color != 0 && color == currentColor) {
-            currentCount++;
-        }
-        if (currentCount >= modeCount) {
-            modeCount = currentCount;
-            modeColor = currentColor;
-        }
-        if (color != currentColor) {
-            currentColor = color;
-            currentCount = 1;
+    for (int32_t row = 0; row < height; row++) {
+        for (int32_t col = 0; col < width; col++) {
+            uint32_t color = pixels[row * width + col];
+            uint32_t distance = abs(row - height / 2) + abs(col - width / 2);
+            if (color != 0 && distance < nearestDistance) {
+                nearestColor = color;
+                nearestDistance = distance;
+            }
         }
     }
 
-    return modeColor;
+    return nearestColor;
 }
 
 void FrameBuffer::init(RenderState& _rs) {
