@@ -27,7 +27,9 @@ const static std::string key_name("name");
 
 TextStyleBuilder::TextStyleBuilder(const TextStyle& _style)
     : StyleBuilder(_style),
-      m_style(_style) {}
+      m_style(_style) {
+    m_textLabels = std::make_unique<TextLabels>(m_style);
+}
 
 void TextStyleBuilder::setup(const Tile& _tile){
     m_tileSize = _tile.getProjection()->TileSize();
