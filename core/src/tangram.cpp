@@ -5,6 +5,7 @@
 #include "scene/sceneLoader.h"
 #include "style/material.h"
 #include "style/style.h"
+#include "style/textStyleBuilder.h"
 #include "labels/labels.h"
 #include "text/fontContext.h"
 #include "tile/tileManager.h"
@@ -93,6 +94,15 @@ public:
 
     std::vector<FeatureSelectionQuery> featureSelectionQueries;
     std::vector<LabelSelectionQuery> labelSelectionQueries;
+
+    struct {
+        std::unique_ptr<StyledMesh> mesh = nullptr;
+        std::unique_ptr<TextStyle> style = nullptr;
+        bool ready = false;;
+    } overlay;
+    void initOverlay(Scene& scene);
+    void renderOverlay();
+
 };
 
 void Map::Impl::setEase(EaseField _f, Ease _e) {
@@ -122,6 +132,62 @@ Map::~Map() {
 
     TextDisplay::Instance().deinit();
     Primitives::deinit();
+}
+
+void Map::Impl::initOverlay(Scene& scene) {
+
+    overlay.mesh = nullptr;
+    overlay.style = nullptr;
+
+    if (scene.fontContext()) {
+        overlay.style = std::make_unique<TextStyle>("overlay", scene.fontContext(), true);
+        overlay.style->build(scene);
+        auto builder = overlay.style->createBuilder();
+
+        TextStyle::Parameters p;
+        p.font = scene.fontContext()->getFont("default", "normal", "400", 18);
+        p.text = "© Mapzen. © OpenStreetMap";
+        p.strokeWidth = 4;
+        p.fontSize = 18;
+        p.fill = 0xff444444;
+        p.strokeColor = 0xaaffffff;
+        p.wordWrap = false;
+        p.labelOptions.anchors.anchor = { {LabelProperty::Anchor::top_right} };
+        p.labelOptions.anchors.count = 1;
+
+        TextStyleBuilder* b = static_cast<TextStyleBuilder*>(builder.get());
+        b->prepareLabel(p, Label::Type::point);
+        b->addLabel(p, Label::Type::point, Label::WorldTransform(glm::vec3(0.f)), 0);
+        overlay.mesh = builder->build();
+
+        auto* mesh = dynamic_cast<const LabelSet*>(overlay.mesh.get());
+        if (!mesh || mesh->getLabels().empty()) {
+            LOGE("Failed to create overlay");
+            overlay.mesh = nullptr;
+            overlay.style = nullptr;
+        }
+
+        overlay.ready = false;
+    }
+}
+
+void Map::Impl::renderOverlay() {
+    if (overlay.mesh) {
+        if (!overlay.ready) {
+            overlay.ready = true;
+            overlay.style->onBeginUpdate();
+
+            auto* mesh = dynamic_cast<const LabelSet*>(overlay.mesh.get());
+            auto& l = mesh->getLabels()[0];
+            l->setScreenPosition({10, view.getHeight()});
+            l->enterState(Label::State::visible);
+            l->evalState(0);
+            l->addVerticesToMesh();
+        }
+        overlay.style->onBeginFrame(renderState);
+        overlay.style->onBeginDrawFrame(renderState, view, *scene);
+        overlay.style->onEndDrawFrame();
+    }
 }
 
 void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
@@ -181,6 +247,8 @@ void Map::Impl::setScene(std::shared_ptr<Scene>& _scene) {
     if (animated != isContinuousRendering()) {
         setContinuousRendering(animated);
     }
+
+    initOverlay(*scene);
 }
 
 // NB: Not thread-safe. Must be called on the main/render thread!
@@ -315,6 +383,8 @@ void Map::resize(int _newWidth, int _newHeight) {
     impl->view.setSize(_newWidth, _newHeight);
 
     impl->selectionBuffer = std::make_unique<FrameBuffer>(_newWidth/2, _newHeight/2);
+
+    impl->overlay.ready = false;
 
     Primitives::setResolution(impl->renderState, _newWidth, _newHeight);
 }
@@ -555,6 +625,8 @@ void Map::render() {
             style->onEndDrawFrame();
         }
     }
+
+    impl->renderOverlay();
 
     impl->labels.drawDebug(impl->renderState, impl->view);
 
@@ -900,6 +972,7 @@ void Map::setupGL() {
     // created, so we invalidate all data that depends on OpenGL object handles.
     impl->renderState.increaseGeneration();
     impl->renderState.invalidate();
+    impl->overlay.ready = false;
 
     // Set default primitive render color
     Primitives::setColor(impl->renderState, 0xffffff);
