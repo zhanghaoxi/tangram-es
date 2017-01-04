@@ -197,6 +197,10 @@ void scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
 
 }
 
+std::string getTextStyle(std::string text) {
+    return "{ style: 'text', text_source: \"function() { return '"+ text +"'; }\", collide: false, font: { size: 64px, fill: '#ffffff', stroke: { color: '#000000', width: 2px } } }";
+}
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     if (action == GLFW_PRESS) {
@@ -276,9 +280,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 glfwSetWindowShouldClose(main_window, true);
                 break;
             case GLFW_KEY_F1:
-                map->setPosition(-74.00976419448854, 40.70532700869127);
-                map->setZoom(16);
-                break;
+            {
+                map->setPosition(-122.422345, 37.826570);
+                map->setZoom(10);
+
+                LngLat p1 = LngLat(-122.422345, 37.826570);
+                MarkerID m1 = map->markerAdd();
+                map->markerSetPoint(m1, p1);
+                map->markerSetStyling(m1, getTextStyle("m1").c_str());
+
+                LngLat p2 = LngLat(-122.422695, 38.026288);
+                MarkerID m2 = map->markerAdd();
+                map->markerSetPoint(m2, p2);
+                map->markerSetStyling(m2, getTextStyle("m2").c_str());
+            }
+
+               break;
             case GLFW_KEY_F2:
                 map->setPosition(8.82, 53.08);
                 map->setZoom(14);
