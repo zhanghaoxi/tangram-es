@@ -145,6 +145,8 @@ bool TextLabel::updateScreenTransform(const glm::mat4& _mvp, const ViewState& _v
 
             return true;
         }
+        default:
+            break;
     }
 
     return false;
