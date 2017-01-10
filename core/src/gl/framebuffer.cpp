@@ -145,8 +145,6 @@ void FrameBuffer::init(RenderState& _rs) {
         m_valid = true;
     }
 
-    m_generation = _rs.generation();
-
     m_disposer = Disposer(_rs);
 }
 
@@ -156,11 +154,9 @@ FrameBuffer::~FrameBuffer() {
     GLuint glHandle = m_glFrameBufferHandle;
 
     m_disposer([=](RenderState& rs) {
-        if (rs.isValidGeneration(generation)) {
-            rs.framebufferUnset(glHandle);
+        rs.framebufferUnset(glHandle);
 
-            GL::deleteFramebuffers(1, &glHandle);
-        }
+        GL::deleteFramebuffers(1, &glHandle);
     });
 }
 

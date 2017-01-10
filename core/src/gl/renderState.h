@@ -29,12 +29,6 @@ public:
     // Reset the render states.
     void invalidate();
 
-    int generation();
-
-    void increaseGeneration();
-
-    bool isValidGeneration(int _generation);
-
     // Get the texture slot from a texture unit from 0 to TANGRAM_MAX_TEXTURE_UNIT-1.
     static GLuint getTextureUnit(GLuint _unit);
 

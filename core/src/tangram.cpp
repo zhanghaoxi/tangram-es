@@ -826,15 +826,13 @@ void Map::setupGL() {
 
     LOG("setup GL");
 
-    impl->tileManager.clearTileSets();
+    impl->renderState.invalidate();
 
     impl->markerManager.rebuildAll();
 
-    // Reconfigure the render states. Increases context 'generation'.
-    // The OpenGL context has been destroyed since the last time resources were
-    // created, so we invalidate all data that depends on OpenGL object handles.
-    impl->renderState.increaseGeneration();
-    impl->renderState.invalidate();
+    if (impl->scene && !impl->scene->path().empty()) {
+        loadScene(impl->scene->path().c_str());
+    }
 
     // Set default primitive render color
     Primitives::setColor(impl->renderState, 0xffffff);

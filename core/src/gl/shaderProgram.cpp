@@ -20,24 +20,21 @@ ShaderProgram::ShaderProgram() {
 
 ShaderProgram::~ShaderProgram() {
 
-    auto generation = m_generation;
     auto glProgram = m_glProgram;
     auto glFragmentShader = m_glFragmentShader;
     auto glVertexShader = m_glVertexShader;
 
     m_disposer([=](RenderState& rs) {
-        if (rs.isValidGeneration(generation)) {
-            if (glProgram != 0) {
-                GL::deleteProgram(glProgram);
-            }
+        if (glProgram != 0) {
+            GL::deleteProgram(glProgram);
+        }
 
-            if (glFragmentShader != 0) {
-                GL::deleteShader(glFragmentShader);
-            }
+        if (glFragmentShader != 0) {
+            GL::deleteShader(glFragmentShader);
+        }
 
-            if (glVertexShader != 0) {
-                GL::deleteShader(glVertexShader);
-            }
+        if (glVertexShader != 0) {
+            GL::deleteShader(glVertexShader);
         }
         // Deleting the shader program that is currently in-use sets the current shader program to 0
         // so we un-set the current program in the render state.
@@ -99,38 +96,27 @@ GLint ShaderProgram::getAttribLocation(const std::string& _attribName) {
 
 GLint ShaderProgram::getUniformLocation(const UniformLocation& _uniform) {
 
-    if (m_generation == _uniform.generation) {
-        return _uniform.location;
-    }
-
-    _uniform.generation = m_generation;
     _uniform.location = GL::getUniformLocation(m_glProgram, _uniform.name.c_str());
 
     return _uniform.location;
 }
 
 bool ShaderProgram::use(RenderState& rs) {
-    bool valid = true;
-
-    checkValidity(rs);
 
     if (m_needsBuild) {
         build(rs);
     }
 
-    valid &= (m_glProgram != 0);
-
-    if (valid) {
+    if (isValid()) {
         rs.shaderProgram(m_glProgram);
     }
 
-    return valid;
+    return isValid();
 }
 
 bool ShaderProgram::build(RenderState& rs) {
 
     m_needsBuild = false;
-    m_generation = rs.generation();
 
     if (m_invalidShaderSource) { return false; }
 
@@ -333,17 +319,6 @@ std::string ShaderProgram::applySourceBlocks(const std::string& source, bool fra
     // }
 
     return sourceOut.str();
-}
-
-void ShaderProgram::checkValidity(RenderState& rs) {
-
-    if (!rs.isValidGeneration(m_generation)) {
-        m_glFragmentShader = 0;
-        m_glVertexShader = 0;
-        m_glProgram = 0;
-        m_needsBuild = true;
-        m_uniformCache.clear();
-    }
 }
 
 std::string ShaderProgram::getExtensionDeclaration(const std::string& _extension) {

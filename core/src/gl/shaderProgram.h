@@ -55,7 +55,7 @@ public:
     GLint getUniformLocation(const UniformLocation& _uniformName);
 
     // Return true if this object represents a valid OpenGL shader program.
-    bool isValid(RenderState& rs) const { return m_glProgram != 0; };
+    bool isValid() const { return m_glProgram != 0; };
 
     // Bind the program in OpenGL if it is not already bound; If the shader sources
     // have been modified since the last time build() was called, also calls build().
@@ -122,7 +122,6 @@ private:
         return false;
     }
 
-    int m_generation = -1;
     GLuint m_glProgram = 0;
     GLuint m_glFragmentShader = 0;
     GLuint m_glVertexShader = 0;
@@ -143,7 +142,6 @@ private:
 
     Disposer m_disposer;
 
-    void checkValidity(RenderState& rs);
     GLuint makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader);
     GLuint makeCompiledShader(const std::string& _src, GLenum _type);
 
