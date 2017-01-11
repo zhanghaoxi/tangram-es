@@ -300,7 +300,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, const std::shared
         }
     }
     //shader.addSourceBlock("defines", "#define " + name + " " + value);
-    shaders["defines"]["STYLE"] = style.getName();
+    // shaders["defines"]["STYLE"] = style.getName();
 
     if (Node definesNode = shaders["defines"]) {
         for (const auto& define : definesNode) {
