@@ -13,6 +13,7 @@
 #include "labels/labelSet.h"
 #include "labels/textLabel.h"
 #include "marker/marker.h"
+#include "labels/obbBuffer.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -305,7 +306,7 @@ void Labels::handleOcclusions(const ViewState& _viewState) {
         }
 
         ScreenTransform transform { m_transforms, entry.transform };
-        LabelOBBs obbs { m_obbs, entry.obbs, true };
+        OBBBuffer obbs { m_obbs, entry.obbs, true };
 
         l->obbs(transform, obbs);
 
@@ -426,7 +427,7 @@ void Labels::updateLabelSet(const ViewState& _viewState, float _dt,
         m_needUpdate |= entry.label->evalState(_dt);
 
         if (entry.label->visibleState()) {
-            for (auto& obb : LabelOBBs{ m_obbs, entry.obbs }) {
+            for (auto& obb : OBBBuffer{ m_obbs, entry.obbs }) {
 
                 if (obb.getExtent().intersect(screenBounds)) {
                     entry.label->addVerticesToMesh(transform, _viewState.viewportSize);
@@ -487,7 +488,7 @@ void Labels::drawDebug(RenderState& rs, const View& _view) {
         }
 #endif
 
-        for (auto& obb : LabelOBBs{ m_obbs, entry.obbs }) {
+        for (auto& obb : OBBBuffer{ m_obbs, entry.obbs }) {
             Primitives::drawPoly(rs, &(obb.getQuad())[0], 4);
         }
 
