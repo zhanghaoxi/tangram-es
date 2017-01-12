@@ -164,6 +164,8 @@ bool ShaderProgram::build(RenderState& rs) {
 
 GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShader) {
 
+    const clock_t begin = clock();
+
     GLuint program = GL::createProgram();
 
     GL::attachShader(program, _fragShader);
@@ -187,6 +189,9 @@ GLuint ShaderProgram::makeLinkedShaderProgram(GLint _fragShader, GLint _vertShad
         return 0;
     }
 
+    float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    LOG(" link time %f", loadTime);
+
     return program;
 }
 
@@ -196,14 +201,20 @@ GLuint ShaderProgram::makeCompiledShader(RenderState& rs, const std::string& _sr
 
     auto entry = cache.emplace(_src, 0);
     if (!entry.second) {
+        LOG("%d reuse shader %d", _type == GL_VERTEX_SHADER, entry.first->second);
         return entry.first->second;
     }
+
+    const clock_t begin = clock();
 
     GLuint shader = GL::createShader(_type);
 
     const GLchar* source = (const GLchar*) _src.c_str();
     GL::shaderSource(shader, 1, &source, NULL);
     GL::compileShader(shader);
+
+    float loadTime = (float(clock() - begin) / CLOCKS_PER_SEC) * 1000;
+    LOG("shader %d compile time %f", shader, loadTime);
 
     GLint isCompiled;
     GL::getShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
