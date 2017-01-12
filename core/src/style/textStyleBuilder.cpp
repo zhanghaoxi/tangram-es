@@ -190,8 +190,11 @@ bool TextStyleBuilder::addFeatureCommon(const Feature& _feat, const DrawRule& _r
     } else if (_feat.geometryType == GeometryType::polygons) {
         for (auto& polygon : _feat.polygons) {
             if (_iconText) {
-                auto p = centroid(polygon);
-                addLabel(params, Label::Type::point, { p, p }, _rule);
+                glm::vec2 c;
+                if (!polygon.empty()) {
+                    c = glm::vec2(centroid(polygon.front().begin(), polygon.front().end()));
+                }
+                addLabel(params, Label::Type::point, { c, c }, _rule);
             } else {
                 for (auto& line : polygon) {
                     for (auto& point : line) {
