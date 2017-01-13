@@ -831,7 +831,9 @@ void Map::setupGL() {
     impl->markerManager.rebuildAll();
 
     if (impl->scene && !impl->scene->path().empty()) {
+        auto updates = impl->sceneUpdates;
         loadScene(impl->scene->path().c_str());
+        impl->sceneUpdates = updates;
     }
 
     // Set default primitive render color
